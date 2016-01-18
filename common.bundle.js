@@ -5,6 +5,10 @@ var gridItem = new gridFactory();
 
 
 gridItem.create({
+  urlRead: 
+  urlUpdate: 
+  urlDelete: 
+  urlCreate: 
   containerSelector: '.js-grid-item-container',
   id: 'item',
   onSelectTd: function(event) {
