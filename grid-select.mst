@@ -1,0 +1,9 @@
+<select class="js-grid-td-input">
+
+{{#.}}
+
+	<option value="{{key}}">{{value}}</option>
+
+{{/.}}
+
+</select>

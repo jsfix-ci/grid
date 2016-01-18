@@ -1,0 +1,1 @@
+<input class="js-grid-td-input" type="{{type}}" value="{{value}}">

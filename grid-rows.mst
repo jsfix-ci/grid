@@ -1,0 +1,13 @@
+{{#.}}
+
+<tr>
+
+ {{#.}}
+
+	<td class="grid-cell grid-td js-grid-td">{{.}}</td>
+
+ {{/.}}
+
+</tr>
+
+{{/.}}

@@ -1,0 +1,11 @@
+<table class="js-grid-{{options.id}}">
+	<tr class="js-grid-row-heading">
+
+{{#.}}
+
+		<th class="grid-cell grid-th js-grid-th" data-key="{{key}}">{{name}}</th>
+
+{{/.}}
+
+	</tr>
+</table>
