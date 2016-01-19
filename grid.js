@@ -28,6 +28,7 @@ var Grid = function () {
   this.rowHeadingClass = 'js-grid-row-heading';
   this.cellClass = 'js-grid-cell';
   this.inputClass = 'js-grid-cell-input';
+  this.searchInputClass = 'js-grid-search-input';
 };
 
 
@@ -40,22 +41,45 @@ Grid.prototype.create = function(options) {
 
   this.$container = $(this.options.containerSelector);
 
-  this.setEvents();
-  this.storeInitialData();
-
   // put grid container in dom
   this.$container.html(mustache.render(mustacheTemplates.grid, this.options.cols));
 
-  // get initial data
-  var rows = [
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    [2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    [3, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    [4, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-  ];
+  this.setEvents({data: this});
+  this.storeInitialData();
 
-  // store initial data
-  this.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, rows));
+  this.read({data: this});
+};
+
+
+Grid.prototype.read = function(event) {
+
+  // builds an object to understand
+  // any search key > val (id -> 10002)
+  // any order asc / desc (id -> asc)
+  // page requested
+  // how many per page (20, 40)
+  var data = {};
+
+  $.ajax({
+    type: 'get',
+    url: event.data.options.url.read,
+    dataType: 'json',
+    data: data,
+    success: function(response) {
+      event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, response.rows));
+
+      // get back
+      // current page #
+      // total possible pages
+      // rows
+      console.log(response);
+    },
+    error: function(response) {
+      console.log(response);
+    }
+  });
+  
+
 };
 
 
@@ -70,18 +94,25 @@ Grid.prototype.storeInitialData = function() {
 };
 
 
-Grid.prototype.setEvents = function() {
+Grid.prototype.setEvents = function(event) {
+  var $document = $(document);
 
   // selecting a cell
   // this.$container.on(gEvtNs('mouseup'), gS(this.cellClass), this, this.cellSelect);
 
   // clicking the document
   // could be a cell or row!
-  $(document).on(gEvtNs('mouseup'), this, this.mouseupDocument);
+  $document.on('mousedown.grid-' + event.data.options.id, this, this.mouseDocument);
+
+  // search input
+  // $document.on('mousedown.grid-' + this.options.id, '.selector', function(event) {
+  //   event.preventDefault();
+  //   /* Act on the event */
+  // });
 };
 
 
-Grid.prototype.mouseupDocument = function(event) {
+Grid.prototype.mouseDocument = function(event) {
   $target = $(event.target);
 
   // no target
@@ -196,22 +227,26 @@ Grid.prototype.cellDeselect = function(event) {
   data[event.data.primaryKey] = primaryKeyValue;
   data[model.key] = newValue;
 
-  return console.log('updating row with', data);
+  event.data.update(event, data);
+};
 
-  // $.ajax({
-  //   type: 'get',
-  //   url: event.data.url.update,
-  //   dataType: 'json',
-  //   data: {
-  //     // : value
-  //   },
-  //   success: function(response) {
-  //     // change the field to the new val
-  //   },
-  //   error: function(response) {
-  //     // set the field back to what it was originally
-  //   }
-  // });
+
+// persist a rows
+Grid.prototype.update = function(event, data) {
+  $.ajax({
+    type: 'get',
+    url: event.data.options.url.update,
+    dataType: 'html',
+    data: data,
+    success: function(response) {
+      console.log('updated');
+      console.log(response);
+    },
+    error: function(response) {
+      console.log('not updated');
+      console.log(response);
+    }
+  });
 };
 
 
@@ -287,11 +322,13 @@ Grid.prototype.cellSelect = function(event, $cell) {
     template = mustacheTemplates.input;
     data = {type: type, value: $cell.data('value')};
   };
+  
   $cell
     .html(mustache.render(template, data))
     .find(gS(event.data.inputClass))
-    .focus()
-    .select();
+    .focus();
+
+  $cell.select();
 };
 
 

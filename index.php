@@ -23,6 +23,7 @@
 </head>
 <body>
 	<div class="js-grid-item-container"></div>
+	<div class="js-grid-baby-container"></div>
 	<script>var hi;</script>
 	<script id="mst-grid" type="x-tmpl-mustache"><?php echo file_get_contents('grid.mst') ?></script>
 	<script id="mst-grid-input" type="x-tmpl-mustache"><?php echo file_get_contents('grid-input.mst') ?></script>

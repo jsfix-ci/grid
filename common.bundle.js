@@ -2,15 +2,15 @@ var $ = require('jquery');
 var mustache = require('mustache');
 var gridFactory = require('./grid');
 var gridItem = new gridFactory();
-var url = require('codex/utility/url');
+var gridBaby = new gridFactory();
 
 
 gridItem.create({
   url: {
-    read: url.generate(),
-    update: url.generate(),
-    delete: url.generate(),
-    create: url.generate()
+    read: 'request/read.php',
+    update: 'request/update.php',
+    delete: 'request/delete.php',
+    create: 'request/create.php'
   },
   containerSelector: '.js-grid-item-container',
   id: 'item',
@@ -25,6 +25,7 @@ gridItem.create({
       key: 'id',
       name: 'ID',
       primaryKey: true,
+      search: true,
       edit: false
     },
     {
@@ -113,5 +114,35 @@ gridItem.create({
       name: 'Composite?',
       edit: false
     }
-  ],
+  ]
+});
+
+gridBaby.create({
+  url: {
+    read: 'request/read-baby.php',
+    update: 'request/update.php',
+    delete: 'request/delete.php',
+    create: 'request/create.php'
+  },
+  containerSelector: '.js-grid-baby-container',
+  id: 'baby',
+  cols: [
+    {
+      key: 'id',
+      name: 'ID',
+      primaryKey: true,
+      search: true,
+      edit: false
+    },
+    {
+      key: 'cost-price',
+      name: 'Cst Price',
+      type: 'number'
+    },
+    {
+      key: 'composite',
+      name: 'Composite?',
+      edit: false
+    }
+  ]
 });
