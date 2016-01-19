@@ -2,13 +2,17 @@ var $ = require('jquery');
 var mustache = require('mustache');
 var gridFactory = require('./grid');
 var gridItem = new gridFactory();
+var url = require('codex/utility/url');
+
 
 
 gridItem.create({
-  urlRead: 
-  urlUpdate: 
-  urlDelete: 
-  urlCreate: 
+  url: {
+    read: url.generate(),
+    update: url.generate(),
+    delete: url.generate(),
+    create: url.generate()
+  }
   containerSelector: '.js-grid-item-container',
   id: 'item',
   onSelectTd: function(event) {
@@ -19,6 +23,7 @@ gridItem.create({
   },
   cols: {
     'id': {
+      primaryKey: true,
       name: 'ID',
       edit: false
     },

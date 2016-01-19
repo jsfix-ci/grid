@@ -60,7 +60,8 @@ Grid.prototype.getModel = function(event, index) {
 };
 
 
-// deselect with classes and then 
+// deselect with classes
+// must resolve persistence, does this row need saving?
 Grid.prototype.rowDeselect = function(event) {
   var selectedTr = event.data.$container.find('tr.is-selected');
   if (!selectedTr.length) {
@@ -78,7 +79,23 @@ Grid.prototype.rowDeselect = function(event) {
     .removeClass(event.data.selectedClass)
     .html(selectedTd.find('.js-grid-td-input').val());
 
-  // perform persist call?
+  // perform persist update
+  var data = {id: 'how to find id of row?', 'key of col': 'new value'};
+  $.ajax({
+    type: 'get',
+    url: event.data.url.update,
+    dataType: 'json',
+    data: {
+      : value
+    },
+    success: function(response) {
+      // change the field to the new val
+    },
+    error: function(response) {
+      // set the field back to what it was originally
+    }
+  });
+  
 };
 
 
