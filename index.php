@@ -10,6 +10,15 @@
 		.is-selected {
 			background-color: yellow;
 		}
+
+		.grid-cell-input {
+			width: 100%;
+			display: block;
+		}
+
+		.grid-cell-heading {
+			width: 6.25%;
+		}
 	</style>
 </head>
 <body>

@@ -1,8 +1,8 @@
-<select class="js-grid-td-input">
+<select class="grid-cell-input js-grid-cell-input">
 
 {{#.}}
 
-	<option value="{{key}}">{{value}}</option>
+	<option value="{{key}}" {{#keySelected}}selected{{/keySelected}}>{{value}}</option>
 
 {{/.}}
 

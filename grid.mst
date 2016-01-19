@@ -3,7 +3,7 @@
 
 {{#.}}
 
-		<th class="grid-cell grid-th js-grid-th" data-key="{{key}}">{{name}}</th>
+		<th class="grid-cell grid-cell-heading js-grid-cell-heading" data-key="{{key}}">{{name}}</th>
 
 {{/.}}
 

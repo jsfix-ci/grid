@@ -5,66 +5,74 @@ var gridItem = new gridFactory();
 var url = require('codex/utility/url');
 
 
-
 gridItem.create({
   url: {
     read: url.generate(),
     update: url.generate(),
     delete: url.generate(),
     create: url.generate()
-  }
+  },
   containerSelector: '.js-grid-item-container',
   id: 'item',
-  onSelectTd: function(event) {
-    console.log('onSelectCell', event);
+  onSelectTd: function() {
+    console.log('onSelectCell', this);
   },
-  onSelectTr: function(event) {
-    console.log('onSelectRow', event);
+  onSelectTr: function() {
+    console.log('onSelectRow', this);
   },
-  cols: {
-    'id': {
-      primaryKey: true,
+  cols: [
+    {
+      key: 'id',
       name: 'ID',
+      primaryKey: true,
       edit: false
     },
-    'sku': {
+    {
+      key: 'sku',
       name: 'SKU',
       required: true
     },
-    'barcode': {
+    {
+      key: 'barcode',
       name: 'Barcode'
     },
-    'alt-barcode': {
+    {
+      key: 'alt-barcode',
       name: 'Alt. Code'
     },
-    'mpn': {
+    {
+      key: 'mpn',
       name: 'MPN'
     },
-    'name': {
+    {
+      key: 'name',
       name: 'Name',
       required: true
     },
-    'stock': {
+    {
+      key: 'stock',
       name: 'Stock',
       edit: false
     },
-    'aloc-stock': {
+    {
+      key: 'aloc-stock',
       name: 'Aloc Stock',
       edit: false
     },
-    'min-stock': {
+    {
+      key: 'min-stock',
       name: 'Min Stock',
       type: 'number',
       required: true
     },
-    'location': {
+    {
+      key: 'location',
       name: 'Location',
-      type: 'select',
       selectOptions: {1: 'here', 2: 'there'}
     },
-    'status': {
+    {
+      key: 'status',
       name: 'Status',
-      type: 'select',
       selectOptions: {
         Current: 'Current',
         Dropship: 'Dropship',
@@ -72,35 +80,38 @@ gridItem.create({
         Obsolete: 'Obsolete'
       }
     },
-    'supplier': {
+    {
+      key: 'supplier',
       name: 'Supplier',
-      type: 'select',
       selectOptions: {
         1: 'China',
         2: 'Burnley',
       }
     },
-    'cost-price': {
+    {
+      key: 'cost-price',
       name: 'Cst Price',
       type: 'number'
     },
-    'requires-count': {
+    {
+      key: 'requires-count',
       name: 'Rq Count',
       search: true,
       edit: false,
-      type: 'select',
       selectOptions: {
         yes: 'Yes',
         no: 'No'
       }
     },
-    'print': {
+    {
+      key: 'print',
       name: 'Print',
       edit: false
     },
-    'composite': {
+    {
+      key: 'composite',
       name: 'Composite?',
       edit: false
     }
-  },
+  ],
 });

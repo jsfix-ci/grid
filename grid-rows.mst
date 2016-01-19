@@ -1,10 +1,10 @@
 {{#.}}
 
-<tr>
+<tr class="js-grid-row">
 
  {{#.}}
 
-	<td class="grid-cell grid-td js-grid-td">{{.}}</td>
+	<td class="grid-cell grid-td js-grid-cell" data-value="{{.}}">{{.}}</td>
 
  {{/.}}
 
