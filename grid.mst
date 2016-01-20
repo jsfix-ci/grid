@@ -1,4 +1,4 @@
-<table class="js-grid-{{options.id}}">
+<table class="js-grid-table">
 	<tr class="js-grid-row-heading">
 
 {{#.}}

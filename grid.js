@@ -7,6 +7,7 @@ var mustacheTemplates = {
   input: $('#mst-grid-input').html(),
   select: $('#mst-grid-select').html()
 };
+var timeoutId;
 
 
 // obtains css selector version of a class name
@@ -18,6 +19,11 @@ function gS (className) {
 // obtain event namespaced
 function gEvtNs (eventName) {
   return eventName + '.grid';
+}
+
+
+function getContainerSelector (id) {
+  return 'js-grid-' + id + '-container';
 }
 
 
@@ -34,12 +40,12 @@ var Grid = function () {
 
 Grid.prototype.create = function(options) {
   var defaults = {
-    onSelectTd: function() {},
-    onSelectTr: function() {},
+    onSelectCell: function() {},
+    onSelectRow: function() {},
   };
   this.options = $.extend(defaults, options);
 
-  this.$container = $(this.options.containerSelector);
+  this.$container = $(gS(getContainerSelector(this.options.id)));
 
   // put grid container in dom
   this.$container.html(mustache.render(mustacheTemplates.grid, this.options.cols));
@@ -47,19 +53,25 @@ Grid.prototype.create = function(options) {
   this.setEvents({data: this});
   this.storeInitialData();
 
-  this.read({data: this});
+  this.read({data: this}, {});
 };
 
 
-Grid.prototype.read = function(event) {
+Grid.prototype.read = function(event, data) {
 
   // builds an object to understand
   // any search key > val (id -> 10002)
   // any order asc / desc (id -> asc)
   // page requested
   // how many per page (20, 40)
-  var data = {};
+  // var data = {};
 
+  // clear out old rows
+  event.data.$container
+    .find(gS(event.data.rowClass))
+    .remove();
+
+  // get new fun rows
   $.ajax({
     type: 'get',
     url: event.data.options.url.read,
@@ -72,10 +84,8 @@ Grid.prototype.read = function(event) {
       // current page #
       // total possible pages
       // rows
-      console.log(response);
     },
     error: function(response) {
-      console.log(response);
     }
   });
   
@@ -95,25 +105,107 @@ Grid.prototype.storeInitialData = function() {
 
 
 Grid.prototype.setEvents = function(event) {
-  var $document = $(document);
 
   // selecting a cell
   // this.$container.on(gEvtNs('mouseup'), gS(this.cellClass), this, this.cellSelect);
 
   // clicking the document
   // could be a cell or row!
-  $document.on('mousedown.grid-' + event.data.options.id, this, this.mouseDocument);
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
 
   // search input
-  // $document.on('mousedown.grid-' + this.options.id, '.selector', function(event) {
-  //   event.preventDefault();
-  //   /* Act on the event */
-  // });
+  event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, event.data.keySearchInput);
+
+  // search input
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function (event) {
+    event.stopPropagation();
+  });
+
+  // order column
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.cellHeadingClass), event.data, event.data.mouseHeadingCell);
+};
+
+
+Grid.prototype.mouseHeadingCell = function(event) {
+  var $cell = $(this);
+  var dataKey = 'order'
+  var order = $cell.data(dataKey);
+  var orderNew;
+
+  if (!order) {
+    orderNew = 'asc';
+  } else if (order == 'asc') {
+    orderNew = 'desc';
+  } else {
+    orderNew = '';
+  };
+
+  $cell
+    .removeClass('is-order-asc')
+    .removeClass('is-order-desc')
+    .data(dataKey, orderNew);
+
+  if (orderNew) {
+    $cell.addClass('is-order-' + orderNew);
+  };
+
+  event.data.buildReadModel(event);
+};
+
+
+Grid.prototype.keySearchInput = function(event) {
+  var $searchInput = $(this);
+  clearTimeout(timeoutId);
+  timeoutId = setTimeout(function() {
+    if ($searchInput.val()) {
+      event.data.buildReadModel(event);
+    };
+  }, 400);
+};
+
+
+// build a model which can be interpreted by the read method in php
+// searches
+// ordering
+// pagination
+Grid.prototype.buildReadModel = function(event) {
+  var data = {
+    search: [],
+    order: [],
+    rowLimit: 20,
+    page: 1
+  };
+
+  // search
+  var $searchInputs = event.data.$container.find(gS(event.data.searchInputClass));
+  if ($searchInputs.length) {
+    for (var index = $searchInputs.length - 1; index >= 0; index--) {
+      var $searchInput = $($searchInputs[index]);
+      var key = $searchInput.parent(gS(event.data.cellHeadingClass)).data('key');
+      var value = $searchInput.val();
+      if (value) {
+        data.search.push({key: key, value: value});
+      };
+    };
+  };
+
+  // ordering
+  var $headingCells = event.data.$container.find(gS(event.data.cellHeadingClass));
+  for (var index = $headingCells.length - 1; index >= 0; index--) {
+    $headingCell = $($headingCells[index]);
+    if ($headingCell.data('order')) {
+      var key = $headingCell.data('key');
+      var value = $headingCell.data('order');
+      data.order.push({key: key, value: value});
+    };
+  };
+
+  event.data.read(event, data);
 };
 
 
 Grid.prototype.mouseDocument = function(event) {
-  $target = $(event.target);
+  var $target = $(event.target);
 
   // no target
   if (!$target.length) {
@@ -240,11 +332,9 @@ Grid.prototype.update = function(event, data) {
     data: data,
     success: function(response) {
       console.log('updated');
-      console.log(response);
     },
     error: function(response) {
       console.log('not updated');
-      console.log(response);
     }
   });
 };
@@ -301,7 +391,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
   var type = event.data.getInputTypeFromModel(model);
 
   // optional select td call
-  event.data.options.onSelectTd.call();
+  event.data.options.onSelectCell.call(this, model, type);
 
   // not editable
   if ('edit' in model && !model.edit) {

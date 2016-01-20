@@ -6,18 +6,17 @@ var gridBaby = new gridFactory();
 
 
 gridItem.create({
+  id: 'item',
   url: {
     read: 'request/read.php',
     update: 'request/update.php',
     delete: 'request/delete.php',
     create: 'request/create.php'
   },
-  containerSelector: '.js-grid-item-container',
-  id: 'item',
-  onSelectTd: function() {
-    console.log('onSelectCell', this);
+  onSelectCell: function(model, type) {
+    console.log('onSelectCell', this, model, type);
   },
-  onSelectTr: function() {
+  onSelectRow: function() {
     console.log('onSelectRow', this);
   },
   cols: [
@@ -31,21 +30,26 @@ gridItem.create({
     {
       key: 'sku',
       name: 'SKU',
+      edit: true,
       required: true
     },
     {
+      edit: true,
       key: 'barcode',
       name: 'Barcode'
     },
     {
+      edit: true,
       key: 'alt-barcode',
       name: 'Alt. Code'
     },
     {
+      edit: true,
       key: 'mpn',
       name: 'MPN'
     },
     {
+      edit: true,
       key: 'name',
       name: 'Name',
       required: true
@@ -61,17 +65,20 @@ gridItem.create({
       edit: false
     },
     {
+      edit: true,
       key: 'min-stock',
       name: 'Min Stock',
       type: 'number',
       required: true
     },
     {
+      edit: true,
       key: 'location',
       name: 'Location',
       selectOptions: {1: 'here', 2: 'there'}
     },
     {
+      edit: true,
       key: 'status',
       name: 'Status',
       selectOptions: {
@@ -82,6 +89,7 @@ gridItem.create({
       }
     },
     {
+      edit: true,
       key: 'supplier',
       name: 'Supplier',
       selectOptions: {
@@ -90,6 +98,7 @@ gridItem.create({
       }
     },
     {
+      edit: true,
       key: 'cost-price',
       name: 'Cst Price',
       type: 'number'
@@ -118,14 +127,13 @@ gridItem.create({
 });
 
 gridBaby.create({
+  id: 'baby',
   url: {
     read: 'request/read-baby.php',
     update: 'request/update.php',
     delete: 'request/delete.php',
     create: 'request/create.php'
   },
-  containerSelector: '.js-grid-baby-container',
-  id: 'baby',
   cols: [
     {
       key: 'id',
@@ -135,6 +143,7 @@ gridBaby.create({
       edit: false
     },
     {
+      edit: true,
       key: 'cost-price',
       name: 'Cst Price',
       type: 'number'

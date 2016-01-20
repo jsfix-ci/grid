@@ -1,0 +1,38 @@
+@charset "utf-8";
+@import "settings.css";
+@import "codex/mixin.css";
+@import "normalize.css";
+@import "codex/reset.css";
+@import "codex/reusable.css";
+@import "codex/keyframe.css";
+@import "codex/form.css";
+@import "codex/typography.css";
+@import "codex/alert.css";
+@import "codex/dialogue.css";
+
+@mixin clearfix .clearfix;
+
+.grid-cell {
+    padding: 5px;
+}
+
+.is-selected {
+    background-color: yellow;
+}
+
+.grid-cell-input {
+    width: 100%;
+    display: block;
+}
+
+.grid-cell-heading {
+    width: 6.25%;
+}
+
+.is-order-asc {
+    background: red;
+}
+
+.is-order-desc {
+    background: blue;
+}
