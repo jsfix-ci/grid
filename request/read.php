@@ -1,5 +1,7 @@
 <?php
 
+// here get doctrine instance and create query based on the request given then return rows, page number, limit
+
 // echo '<pre>';
 // print_r($_REQUEST);
 // echo '</pre>';

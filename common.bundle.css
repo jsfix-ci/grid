@@ -12,12 +12,13 @@
 
 @mixin clearfix .clearfix;
 
-.grid-cell {
-    padding: 5px;
+.grid-cell-base {
+    padding: 3px;
+    border: 1px solid #ccc;
 }
 
 .is-selected {
-    background-color: yellow;
+    background-color: #ccc;
 }
 
 .grid-cell-input {
@@ -26,7 +27,7 @@
 }
 
 .grid-cell-heading {
-    width: 6.25%;
+    /*width: 6.25%;*/
 }
 
 .is-order-asc {
@@ -35,4 +36,20 @@
 
 .is-order-desc {
     background: blue;
+}
+
+.grid-cell-heading {
+	background-color: #eee;
+}
+
+.grid-row:hover {
+	background-color: #eee;
+}
+
+body {
+	padding: 2em;
+}
+
+.grid-container {
+	margin: 2em 0;
 }
