@@ -6,9 +6,25 @@
 		<th class="grid-cell-base grid-cell-heading js-grid-cell-heading" data-key="{{key}}">
 			{{name}}
 			{{#search}}
+				{{#selectOptions.length}}
+
+			<select name="" id="">
+				
+					{{#selectOptions}}
+
+				<option value="{{.}}">{{.}}</option>
+
+					{{/selectOptions}}
+
+
+			</select>
+
+				{{/selectOptions.length}}
+				{{^selectOptions.length}}
 
 			<input type="text" class="grid-search-input js-grid-search-input">
 
+				{{/selectOptions.length}}
 			{{/search}}
 		</th>
 

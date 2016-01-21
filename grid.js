@@ -78,6 +78,14 @@ Grid.prototype.read = function(event, data) {
     dataType: 'json',
     data: data,
     success: function(response) {
+      if (
+        typeof response.rowsTotal === 'undefined'
+        || typeof response.rows === 'undefined'
+        || typeof response.pageCurrent === 'undefined'
+        || typeof response.rowsPerPage === 'undefined'
+      ) {
+        return console.warn('read response malformed', response);
+      };
       event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, response.rows));
 
       // get back
@@ -86,10 +94,9 @@ Grid.prototype.read = function(event, data) {
       // rows
     },
     error: function(response) {
+      return console.warn('problem with read request');
     }
   });
-  
-
 };
 
 
