@@ -7,8 +7,7 @@
 @import "codex/keyframe.css";
 @import "codex/form.css";
 @import "codex/typography.css";
-@import "codex/alert.css";
-@import "codex/dialogue.css";
+@import "dialogue.css";
 
 @mixin clearfix .clearfix;
 

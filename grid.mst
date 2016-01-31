@@ -32,3 +32,4 @@
 
 	</tr>
 </table>
+<button class="grid-button-create js-grid-button-create">Create</button>

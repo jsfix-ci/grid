@@ -1,12 +1,14 @@
 var $ = require('jquery');
 var mustache = require('mustache');
-var keyCode = require('codex/keyCode');
+var keyCode = {};
 var mustacheTemplates = {
   grid: $('#mst-grid').html(),
   rows: $('#mst-grid-rows').html(),
   input: $('#mst-grid-input').html(),
   select: $('#mst-grid-select').html()
 };
+var dialogueFactory = require('dialogue');
+var dialogueCreate = new dialogueFactory();
 var timeoutId;
 
 
@@ -130,6 +132,28 @@ Grid.prototype.setEvents = function(event) {
 
   // order column
   event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.cellHeadingClass), event.data, event.data.mouseHeadingCell);
+
+  event.data.$container.on('click.grid-' + event.data.options.id, gS('js-grid-button-create'), event.data, function(event) {
+
+    dialogueCreate.create({
+      mask: true,
+      className: 'dialogue-grid-create',
+      width: 300,
+      title: 'Create',
+      actions: {
+        'Cancel': function() {
+          this.close();
+        },
+        'Create': function() {
+          console.log('Do create call');
+        }
+      }
+    });
+  })
+};
+
+
+Grid.prototype.getCreateFormHtml = function(event) {
 };
 
 
