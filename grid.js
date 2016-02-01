@@ -5,6 +5,7 @@ var mustacheTemplates = {
   grid: $('#mst-grid').html(),
   rows: $('#mst-grid-rows').html(),
   input: $('#mst-grid-input').html(),
+  formCreate: $('#mst-grid-form-create').html(),
   select: $('#mst-grid-select').html()
 };
 var dialogueFactory = require('dialogue');
@@ -140,12 +141,19 @@ Grid.prototype.setEvents = function(event) {
       className: 'dialogue-grid-create',
       width: 300,
       title: 'Create',
+      html: event.data.getCreateFormHtml(event),
       actions: {
         'Cancel': function() {
           this.close();
         },
         'Create': function() {
-          console.log('Do create call');
+          var data = [];
+          var $formCreateCells = $('.js-form-create-cell');
+          for (var index = $formCreateCells.length - 1; index >= 0; index--) {
+            var $formCreateCell = $($formCreateCells[index]);
+            data[$formCreateCell.prop('name')] = $formCreateCell.val();
+          };
+          
         }
       }
     });
@@ -154,6 +162,28 @@ Grid.prototype.setEvents = function(event) {
 
 
 Grid.prototype.getCreateFormHtml = function(event) {
+  var models = event.data.options.cols;
+  var model;
+  var data = [];
+  for (var index = models.length - 1; index >= 0; index--) {
+    model = models[index];
+
+    model.inputType = event.data.getInputTypeFromModel(model);
+    model.isSelect = model.inputType == 'select';
+
+    // select
+    if (model.isSelect) {
+      model.selectOptionsKeyValue = event.data.getKeyValueFromModelSelectOptions(model);
+    };
+
+    // remove primary key, at end because errors
+    // must have a type otherwise cant have an input
+    if (model.key != event.data.primaryKey && model.inputType) {
+      data.push(model);
+    };
+  };
+
+  return mustache.render(mustacheTemplates.formCreate, data.reverse());
 };
 
 
@@ -388,7 +418,7 @@ Grid.prototype.getInputTypeFromModel = function(model) {
   } else if ('type' in model) {
     return model.type;
   } else {
-    return 'text';
+    return '';
   };
 };
 
@@ -404,6 +434,19 @@ Grid.prototype.selectRowByCell = function(event, $cell) {
   $cell
     .closest(gS(event.data.rowClass))
     .addClass(event.data.selectedClass);
+};
+
+
+Grid.prototype.getKeyValueFromModelSelectOptions = function(model) {
+  var data = [];
+  for (var key in model.selectOptions) {
+    var value = model.selectOptions[key];
+    data.push({
+      key: key,
+      value: value
+    });
+  };
+  return data;
 };
 
 
@@ -432,13 +475,10 @@ Grid.prototype.cellSelect = function(event, $cell) {
   // replace html for input using data value
   if (type == 'select') {
     template = mustacheTemplates.select;
-    for (var key in model.selectOptions) {
-      data.push({
-        keySelected: $cell.data('value') == key,
-        key: key,
-        value: model.selectOptions[key]
-      });
-    }
+    data = event.data.getKeyValueFromModelSelectOptions(model);
+    for (var index = data.length - 1; index >= 0; index--) {
+      data[index].keySelected = $cell.data('value') == data[index].value;
+    };
   } else {
     template = mustacheTemplates.input;
     data = {type: type, value: $cell.data('value')};

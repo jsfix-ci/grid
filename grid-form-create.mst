@@ -1,0 +1,31 @@
+<form class="grid-form-create js-grid-form-create">
+
+{{#.}}
+
+	<div class="grid-form-create-row">
+		<label class="grid-form-create-label">{{name}}</label>
+
+	{{^isSelect}}
+
+		<input class="grid-form-create-input js-form-create-cell" type="{{inputType}}" name="{{key}}">
+
+	{{/isSelect}}
+	{{#isSelect}}
+	
+		<select class="grid-form-create-select js-form-create-cell" name="{{key}}">
+			
+		{{#selectOptionsKeyValue}}
+
+			<option value="{{key}}">{{value}}</option>
+
+		{{/selectOptionsKeyValue}}
+
+		</select>
+
+	{{/isSelect}}
+
+	</div>
+
+{{/.}}
+
+</form>

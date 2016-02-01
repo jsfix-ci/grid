@@ -31,42 +31,49 @@ gridItem.create({
       key: 'sku',
       name: 'SKU',
       edit: true,
+      type: 'text',
       required: true
     },
     {
       edit: true,
+      type: 'text',
       key: 'barcode',
       name: 'Barcode'
     },
     {
       edit: true,
-      key: 'alt-barcode',
+      type: 'text',
+      key: 'altBarcode',
       name: 'Alt. Code'
     },
     {
       edit: true,
+      type: 'text',
       key: 'mpn',
       name: 'MPN'
     },
     {
       edit: true,
+      type: 'text',
       key: 'name',
       name: 'Name',
       required: true
     },
     {
+      type: 'number',
       key: 'stock',
       name: 'Stock',
       edit: false
     },
     {
-      key: 'aloc-stock',
+      type: 'number',
+      key: 'alocStock',
       name: 'Aloc Stock',
       edit: false
     },
     {
       edit: true,
-      key: 'min-stock',
+      key: 'minStock',
       name: 'Min Stock',
       type: 'number',
       required: true
@@ -99,12 +106,12 @@ gridItem.create({
     },
     {
       edit: true,
-      key: 'cost-price',
+      key: 'costPrice',
       name: 'Cst Price',
       type: 'number'
     },
     {
-      key: 'requires-count',
+      key: 'requiresCount',
       name: 'Rq Count',
       search: true,
       edit: false,

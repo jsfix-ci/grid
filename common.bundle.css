@@ -52,3 +52,21 @@ body {
 .grid-container {
 	margin: 2em 0;
 }
+
+.grid-form-create-row {
+    margin: 17px 0;
+}
+
+.grid-form-create-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.grid-form-create-input {
+    width: 100%;
+}
+
+.grid-form-create-select {
+    width: 100%;
+}
