@@ -5,12 +5,12 @@
 	<div class="grid-form-create-row">
 		<label class="grid-form-create-label">{{name}}</label>
 
-	{{^isSelect}}
+	{{^selectOptionsKeyValue.length}}
 
 		<input class="grid-form-create-input js-form-create-cell" type="{{inputType}}" name="{{key}}">
 
-	{{/isSelect}}
-	{{#isSelect}}
+	{{/selectOptionsKeyValue.length}}
+	{{#selectOptionsKeyValue.length}}
 	
 		<select class="grid-form-create-select js-form-create-cell" name="{{key}}">
 			
@@ -22,7 +22,7 @@
 
 		</select>
 
-	{{/isSelect}}
+	{{/selectOptionsKeyValue.length}}
 
 	</div>
 

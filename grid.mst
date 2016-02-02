@@ -3,29 +3,32 @@
 
 {{#.}}
 
-		<th class="grid-cell-base grid-cell-heading js-grid-cell-heading" data-key="{{key}}">
-			{{name}}
-			{{#search}}
-				{{#selectOptions.length}}
+		<th class="grid-cell-base grid-cell-heading js-grid-cell-heading {{#order}}js-grid-cell-heading-orderable{{/order}}" data-key="{{key}}">
 
-			<select name="" id="">
-				
-					{{#selectOptions}}
+	{{name}}
+	{{#search}}
+		{{#selectOptionsKeyValue.length}}
 
-				<option value="{{.}}">{{.}}</option>
+			<select name="" id="" class="js-grid-search-field js-grid-search-select">
+				<option value=""></option>
 
-					{{/selectOptions}}
+			{{#selectOptionsKeyValue}}
+
+				<option value="{{key}}">{{value}}</option>
+
+			{{/selectOptionsKeyValue}}
 
 
 			</select>
 
-				{{/selectOptions.length}}
-				{{^selectOptions.length}}
+		{{/selectOptionsKeyValue.length}}
+		{{^selectOptionsKeyValue.length}}
 
-			<input type="text" class="grid-search-input js-grid-search-input">
+			<input type="text" class="grid-search-input js-grid-search-field js-grid-search-input">
 
-				{{/selectOptions.length}}
-			{{/search}}
+		{{/selectOptionsKeyValue.length}}
+	{{/search}}
+
 		</th>
 
 {{/.}}

@@ -37,7 +37,9 @@ var Grid = function () {
   this.rowHeadingClass = 'js-grid-row-heading';
   this.cellClass = 'js-grid-cell';
   this.inputClass = 'js-grid-cell-input';
+  this.searchFieldClass = 'js-grid-search-field';
   this.searchInputClass = 'js-grid-search-input';
+  this.searchSelectClass = 'js-grid-search-select';
 };
 
 
@@ -47,6 +49,9 @@ Grid.prototype.create = function(options) {
     onSelectRow: function() {},
   };
   this.options = $.extend(defaults, options);
+  this.appendSelectOptionsKeyValue();
+
+  // find out if cols is modified here
 
   this.$container = $(gS(getContainerSelector(this.options.id)));
 
@@ -57,6 +62,23 @@ Grid.prototype.create = function(options) {
   this.storeInitialData();
 
   this.read({data: this}, {});
+};
+
+
+// this structure is needed so that you can loop as an array
+Grid.prototype.appendSelectOptionsKeyValue = function() {
+  for (var index = this.options.cols.length - 1; index >= 0; index--) {
+    if ('selectOptions' in this.options.cols[index]) {
+      this.options.cols[index].selectOptionsKeyValue = [];
+      for (var key in this.options.cols[index].selectOptions) {
+        var value = this.options.cols[index].selectOptions[key];
+        this.options.cols[index].selectOptionsKeyValue.push({
+          key: key,
+          value: value
+        });
+      };
+    };
+  };
 };
 
 
@@ -89,6 +111,17 @@ Grid.prototype.read = function(event, data) {
       ) {
         return console.warn('read response malformed', response);
       };
+
+      // process rows so that any which are select boxes appear are represented as the value
+      for (var indexRow = response.rows.length - 1; indexRow >= 0; indexRow--) {
+
+        // step through each model and compare the row value with the same index and switch it out 
+        for (var indexCell = response.rows[indexRow].length - 1; indexCell >= 0; indexCell--) {
+          response.rows[indexRow][indexCell]
+        };
+      };
+
+
       event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, response.rows));
 
       // get back
@@ -126,13 +159,16 @@ Grid.prototype.setEvents = function(event) {
   // search input
   event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, event.data.keySearchInput);
 
-  // search input
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function (event) {
+  // search select
+  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, event.data.keySearchInput);
+
+  // search field clicking dont order heading
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchFieldClass), event.data, function (event) {
     event.stopPropagation();
   });
 
   // order column
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.cellHeadingClass), event.data, event.data.mouseHeadingCell);
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, '.js-grid-cell-heading-orderable', event.data, event.data.mouseHeadingCell);
 
   event.data.$container.on('click.grid-' + event.data.options.id, gS('js-grid-button-create'), event.data, function(event) {
 
@@ -169,12 +205,6 @@ Grid.prototype.getCreateFormHtml = function(event) {
     model = models[index];
 
     model.inputType = event.data.getInputTypeFromModel(model);
-    model.isSelect = model.inputType == 'select';
-
-    // select
-    if (model.isSelect) {
-      model.selectOptionsKeyValue = event.data.getKeyValueFromModelSelectOptions(model);
-    };
 
     // remove primary key, at end because errors
     // must have a type otherwise cant have an input
@@ -231,21 +261,21 @@ Grid.prototype.keySearchInput = function(event) {
 // pagination
 Grid.prototype.buildReadModel = function(event) {
   var data = {
-    search: [],
-    order: [],
+    search: {},
+    order: {},
     rowLimit: 20,
     page: 1
   };
 
   // search
-  var $searchInputs = event.data.$container.find(gS(event.data.searchInputClass));
+  var $searchInputs = event.data.$container.find(gS(event.data.searchFieldClass));
   if ($searchInputs.length) {
     for (var index = $searchInputs.length - 1; index >= 0; index--) {
       var $searchInput = $($searchInputs[index]);
       var key = $searchInput.parent(gS(event.data.cellHeadingClass)).data('key');
       var value = $searchInput.val();
       if (value) {
-        data.search.push({key: key, value: value});
+        data.search[key] = value;
       };
     };
   };
@@ -257,7 +287,7 @@ Grid.prototype.buildReadModel = function(event) {
     if ($headingCell.data('order')) {
       var key = $headingCell.data('key');
       var value = $headingCell.data('order');
-      data.order.push({key: key, value: value});
+      data.order[key] = value;
     };
   };
 
@@ -437,19 +467,6 @@ Grid.prototype.selectRowByCell = function(event, $cell) {
 };
 
 
-Grid.prototype.getKeyValueFromModelSelectOptions = function(model) {
-  var data = [];
-  for (var key in model.selectOptions) {
-    var value = model.selectOptions[key];
-    data.push({
-      key: key,
-      value: value
-    });
-  };
-  return data;
-};
-
-
 // switch the data out with an input / select
 Grid.prototype.cellSelect = function(event, $cell) {
   var template;
@@ -475,7 +492,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
   // replace html for input using data value
   if (type == 'select') {
     template = mustacheTemplates.select;
-    data = event.data.getKeyValueFromModelSelectOptions(model);
+    data = model.selectOptionsKeyValue;
     for (var index = data.length - 1; index >= 0; index--) {
       data[index].keySelected = $cell.data('value') == data[index].value;
     };

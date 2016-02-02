@@ -25,41 +25,48 @@ gridItem.create({
       name: 'ID',
       primaryKey: true,
       search: true,
+      order: true,
       edit: false
     },
     {
       key: 'sku',
       name: 'SKU',
+      order: true,
       edit: true,
       type: 'text',
       required: true
     },
     {
       edit: true,
+      order: true,
       type: 'text',
       key: 'barcode',
       name: 'Barcode'
     },
     {
       edit: true,
+      order: true,
       type: 'text',
       key: 'altBarcode',
       name: 'Alt. Code'
     },
     {
       edit: true,
+      order: true,
       type: 'text',
       key: 'mpn',
       name: 'MPN'
     },
     {
       edit: true,
+      order: true,
       type: 'text',
       key: 'name',
       name: 'Name',
       required: true
     },
     {
+      order: true,
       type: 'number',
       key: 'stock',
       name: 'Stock',
@@ -72,6 +79,7 @@ gridItem.create({
       edit: false
     },
     {
+      order: true,
       edit: true,
       key: 'minStock',
       name: 'Min Stock',
@@ -85,6 +93,7 @@ gridItem.create({
       selectOptions: {1: 'here', 2: 'there'}
     },
     {
+      order: true,
       edit: true,
       key: 'status',
       name: 'Status',
@@ -99,12 +108,14 @@ gridItem.create({
       edit: true,
       key: 'supplier',
       name: 'Supplier',
+      search: true,
       selectOptions: {
         1: 'China',
         2: 'Burnley',
       }
     },
     {
+      order: true,
       edit: true,
       key: 'costPrice',
       name: 'Cst Price',
