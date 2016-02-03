@@ -1,6 +1,6 @@
 {
   "name": "grid",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "grids for every occasion",
   "main": "grid.js",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/mwyatt/grid#readme",
   "dependencies": {
-    "dialogue": "mwyatt/dialogue#0.0.0",
+    "dialogue": "mwyatt/dialogue#0.0.1",
     "jquery": "1.11.2"
   }
 }
