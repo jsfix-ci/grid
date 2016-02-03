@@ -3,11 +3,11 @@ var mustache = require('mustache');
 var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = {
   grid: $('#mst-grid').html(),
-  rows: $('#mst-grid-rows').html(),
-  input: $('#mst-grid-input').html(),
+  pagination: $('#mst-grid-pagination').html(),
   formCreate: $('#mst-grid-form-create').html(),
-  select: $('#mst-grid-select').html(),
-  pagination: $('#mst-grid-pagination').html()
+  rows: '{{#.}}<tr class="grid-row js-grid-row">{{#.}}<td class="grid-cell-base grid-cell grid-td js-grid-cell" data-value="{{value}}">{{{html}}}</td>{{/.}}</tr>{{/.}}',
+  input: '<input class="grid-cell-input js-grid-cell-input" type="{{type}}" value="{{value}}">',
+  select: '<select class="{{#classNames}}{{.}} {{/classNames}}">{{#options}}<option value="{{key}}" {{#keySelected}}selected{{/keySelected}}>{{value}}</option>{{/options}}</select>'
 };
 var dialogueFactory = require('dialogue');
 var dialogueCreate = new dialogueFactory();

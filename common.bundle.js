@@ -1,5 +1,4 @@
 var $ = require('jquery');
-var mustache = require('mustache');
 var gridFactory = require('./grid');
 var gridItem = new gridFactory();
 var gridBaby = new gridFactory();
