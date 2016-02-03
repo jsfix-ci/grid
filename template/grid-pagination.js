@@ -1,0 +1,11 @@
+module.exports = ''
++ 'page'
++ '{{#selectPages}}'
++ '{{> select}}'
++ '{{/selectPages}}'
++ 'of {{possiblePages}}'
++ 'per page'
++ '{{#selectPerPage}}'
++ '{{> select}}'
++ '{{/selectPerPage}}'
+;
