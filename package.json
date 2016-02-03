@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mwyatt/grid#readme",
   "dependencies": {
-    "dialogue": "mwyatt/dialogue#0.0.0"
+    "dialogue": "mwyatt/dialogue#0.0.0",
+    "jquery": "1.11.2"
   }
 }
