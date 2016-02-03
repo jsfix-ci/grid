@@ -1,12 +1,13 @@
 var $ = require('jquery');
 var mustache = require('mustache');
-var keyCode = {};
+var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = {
   grid: $('#mst-grid').html(),
   rows: $('#mst-grid-rows').html(),
   input: $('#mst-grid-input').html(),
   formCreate: $('#mst-grid-form-create').html(),
-  select: $('#mst-grid-select').html()
+  select: $('#mst-grid-select').html(),
+  pagination: $('#mst-grid-pagination').html()
 };
 var dialogueFactory = require('dialogue');
 var dialogueCreate = new dialogueFactory();
@@ -40,6 +41,9 @@ var Grid = function () {
   this.searchFieldClass = 'js-grid-search-field';
   this.searchInputClass = 'js-grid-search-input';
   this.searchSelectClass = 'js-grid-search-select';
+  this.pageSelectClass = 'js-grid-pagination-select';
+  this.perPageSelectClass = 'js-grid-cell-input-perpage';
+  this.pageContainerClass = 'js-grid-pagination-container';
 };
 
 
@@ -51,17 +55,17 @@ Grid.prototype.create = function(options) {
   this.options = $.extend(defaults, options);
   this.appendSelectOptionsKeyValue();
 
-  // find out if cols is modified here
+  this.rowsPerPage = this.options.perPageOptions[0];
 
   this.$container = $(gS(getContainerSelector(this.options.id)));
 
   // put grid container in dom
-  this.$container.html(mustache.render(mustacheTemplates.grid, this.options.cols));
+  this.$container.html(mustache.render(mustacheTemplates.grid, this.options));
 
   this.setEvents({data: this});
   this.storeInitialData();
 
-  this.read({data: this}, {});
+  this.read({data: this}, this.getReadModelDataDefaults({data: this}));
 };
 
 
@@ -84,17 +88,15 @@ Grid.prototype.appendSelectOptionsKeyValue = function() {
 
 Grid.prototype.read = function(event, data) {
 
-  // builds an object to understand
-  // any search key > val (id -> 10002)
-  // any order asc / desc (id -> asc)
-  // page requested
-  // how many per page (20, 40)
-  // var data = {};
 
   // clear out old rows
   event.data.$container
     .find(gS(event.data.rowClass))
     .remove();
+
+  // event.data.$container
+  //   .find(gS('js-grid-row-heading'))
+  //   .after('Loading ...');
 
   // get new fun rows
   $.ajax({
@@ -106,23 +108,12 @@ Grid.prototype.read = function(event, data) {
       if (
         typeof response.rowsTotal === 'undefined'
         || typeof response.rows === 'undefined'
-        || typeof response.pageCurrent === 'undefined'
-        || typeof response.rowsPerPage === 'undefined'
       ) {
         return console.warn('read response malformed', response);
       };
 
-      // process rows so that any which are select boxes appear are represented as the value
-      for (var indexRow = response.rows.length - 1; indexRow >= 0; indexRow--) {
-
-        // step through each model and compare the row value with the same index and switch it out 
-        for (var indexCell = response.rows[indexRow].length - 1; indexCell >= 0; indexCell--) {
-          response.rows[indexRow][indexCell]
-        };
-      };
-
-
-      event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, response.rows));
+      event.data.readRender(event, response.rows);
+      event.data.renderPagination(event, response);
 
       // get back
       // current page #
@@ -133,6 +124,79 @@ Grid.prototype.read = function(event, data) {
       return console.warn('problem with read request');
     }
   });
+};
+
+
+Grid.prototype.renderPagination = function(event, response) {
+
+  if (typeof Math === 'undefined') {
+    return console.warn('Math object not defined');
+  };
+
+  var rowsTotal = parseInt(response.rowsTotal);
+  var pageCurrent = parseInt(event.data.getPageCurrent(event));
+  var rowsPerPage = event.data.rowsPerPage;
+  var possiblePages;
+
+  // lowest will be 1
+  possiblePages = Math.ceil(rowsTotal / rowsPerPage);
+
+  var options = [];
+  for (var index = 1; index <= possiblePages; index++) {
+    options.push({key: index, value: index, keySelected: pageCurrent == index});
+  };
+
+  // per page
+  var optionsPerPage = [];
+  for (var index = 0; index < event.data.options.perPageOptions.length; index++) {
+    optionsPerPage.push({key: event.data.options.perPageOptions[index], value: event.data.options.perPageOptions[index], keySelected: rowsPerPage == event.data.options.perPageOptions[index]});
+  };
+
+  // render pagination
+  event.data.$container.find(gS(event.data.pageContainerClass)).html(mustache.render(mustacheTemplates.pagination, {
+      possiblePages: possiblePages,
+      selectPages: {options: options, classNames: ['grid-pagination-select', event.data.pageSelectClass]},
+      selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', event.data.perPageSelectClass]},
+    }, {select: mustacheTemplates.select}));
+};
+
+
+Grid.prototype.getPageCurrent = function(event) {
+  return parseInt(event.data.$container.find(gS(event.data.pageSelectClass)).val());
+};
+
+
+Grid.prototype.readRender = function(event, rows) {
+
+  // transform row values
+  // select boxes appear are represented as the value
+  // if the cell has a 'readTemplate' then it needs to be passed through that
+  for (var indexRow = rows.length - 1; indexRow >= 0; indexRow--) {
+
+    // step through each model and compare the row value with the same index and switch it out 
+    for (var indexCell = 0; indexCell <= rows[indexRow].length - 1; indexCell++) {
+      var value = rows[indexRow][indexCell];
+
+      // change to new format html defaults to value
+      rows[indexRow][indexCell] = {value: value, html: value};
+
+      var model = event.data.getModelByIndex(event, indexCell);
+
+      // select box value
+      if ('selectOptions' in model) {
+        if (value in model.selectOptions) {
+          rows[indexRow][indexCell].html = model.selectOptions[value];
+        };
+      };
+
+      // mst template
+      if ('readTemplate' in model) {
+        rows[indexRow][indexCell].html = mustache.render(model.readTemplate, [value]);
+      };
+    };
+  };
+
+  event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, rows));
 };
 
 
@@ -159,6 +223,17 @@ Grid.prototype.setEvents = function(event) {
   // search input
   event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, event.data.keySearchInput);
 
+  // keyup on a edit input
+  event.data.$container.on('keyup.grid-' + event.data.options.id, event.data, function(event) {
+
+    // enter key and a cell is being edited
+    if (keyCode.enter == event.which && event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass))) {
+      event.data.cellDeselect(event);
+    } else if (keyCode.esc == event.which) {
+      // event.data.cellDeselectNoSave(event);
+    };
+  });
+
   // search select
   event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, event.data.keySearchInput);
 
@@ -169,6 +244,12 @@ Grid.prototype.setEvents = function(event) {
 
   // order column
   event.data.$container.on('mousedown.grid-' + event.data.options.id, '.js-grid-cell-heading-orderable', event.data, event.data.mouseHeadingCell);
+
+  // change page
+  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.pageSelectClass), event.data, event.data.buildReadModel);
+
+  // change per page
+  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.perPageSelectClass), event.data, event.data.buildReadModel);
 
   event.data.$container.on('click.grid-' + event.data.options.id, gS('js-grid-button-create'), event.data, function(event) {
 
@@ -255,16 +336,34 @@ Grid.prototype.keySearchInput = function(event) {
 };
 
 
+Grid.prototype.getReadModelDataDefaults = function(event) {
+  return {
+    search: {},
+    order: {},
+    rowsPerPage: event.data.rowsPerPage,
+    pageCurrent: 1
+  };
+};
+
+
 // build a model which can be interpreted by the read method in php
 // searches
 // ordering
 // pagination
 Grid.prototype.buildReadModel = function(event) {
-  var data = {
-    search: {},
-    order: {},
-    rowLimit: 20,
-    page: 1
+  var data = event.data.getReadModelDataDefaults(event);
+
+  // page
+  $pageSelect = $(gS(event.data.pageSelectClass));
+  if ($pageSelect.length) {
+    data.pageCurrent = $pageSelect.val();
+  };
+
+  // per page
+  $perPageSelect = $(gS(event.data.perPageSelectClass));
+  if ($perPageSelect.length) {
+    data.rowsPerPage = $perPageSelect.val();
+    event.data.rowsPerPage = $perPageSelect.val(); // store in memory
   };
 
   // search
@@ -272,9 +371,9 @@ Grid.prototype.buildReadModel = function(event) {
   if ($searchInputs.length) {
     for (var index = $searchInputs.length - 1; index >= 0; index--) {
       var $searchInput = $($searchInputs[index]);
-      var key = $searchInput.parent(gS(event.data.cellHeadingClass)).data('key');
+      var key = $searchInput.closest(gS(event.data.cellHeadingClass)).data('key');
       var value = $searchInput.val();
-      if (value) {
+      if (value !== ' ' && value) { // empty search value, better way?
         data.search[key] = value;
       };
     };
@@ -360,7 +459,7 @@ Grid.prototype.cellDeselect = function(event) {
     return;
   };
 
-  var primaryKeyValue = event.data.getSelectedRowPrimaryHtml(event);
+  var primaryKeyValue = event.data.getSelectedRowPrimaryValue(event);
 
   event.data.rowDeselect(event);
 
@@ -375,7 +474,7 @@ Grid.prototype.cellDeselect = function(event) {
   var model = event.data.getModelByIndex(event, $selectedCell.index());
 
   // not editable
-  if ('edit' in model && !model.edit) {
+  if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
     return;
   };
 
@@ -432,12 +531,12 @@ Grid.prototype.update = function(event, data) {
 
 
 // returns the selected row primary value
-Grid.prototype.getSelectedRowPrimaryHtml = function(event) {
+Grid.prototype.getSelectedRowPrimaryValue = function(event) {
   var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
   var $selectedCell = $selectedRow.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
   var $primaryHeadingCell = $(gS(event.data.cellHeadingClass) + '[data-key="' + event.data.primaryKey + '"]');
   var $primaryCell = $selectedRow.find(gS(event.data.cellClass)).eq($primaryHeadingCell.index());
-  return $primaryCell.html();
+  return $primaryCell.data('value');
 };
 
 
@@ -485,16 +584,17 @@ Grid.prototype.cellSelect = function(event, $cell) {
   event.data.options.onSelectCell.call(this, model, type);
 
   // not editable
-  if ('edit' in model && !model.edit) {
+  if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
     return;
   };
 
   // replace html for input using data value
   if (type == 'select') {
     template = mustacheTemplates.select;
-    data = model.selectOptionsKeyValue;
-    for (var index = data.length - 1; index >= 0; index--) {
-      data[index].keySelected = $cell.data('value') == data[index].value;
+    data.options = model.selectOptionsKeyValue;
+    data.classNames = ['grid-cell-input', event.data.inputClass];
+    for (var index = data.options.length - 1; index >= 0; index--) {
+      data.options[index].keySelected = $cell.data('value') == data.options[index].key;
     };
   } else {
     template = mustacheTemplates.input;

@@ -18,7 +18,5 @@ $rows = [
 
 echo json_encode((object) [
 	'rowsTotal' => count($rows), 
-	'pageCurrent' => 1,
-	'rowsPerPage' => 10,
 	'rows' => $rows
 ]);

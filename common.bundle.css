@@ -11,22 +11,42 @@
 
 @mixin clearfix .clearfix;
 
+.grid-table {
+    width: 100%;
+}
+
 .grid-cell-base {
     padding: 3px;
     border: 1px solid #ccc;
+    font-size: 12px;
+}
+
+.grid-cell-base.is-selected {
+    padding: 0;
 }
 
 .is-selected {
     background-color: #ccc;
 }
 
-.grid-cell-input {
+.grid-cell-heading,
+.grid-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grid-search-input {
     width: 100%;
+}
+
+.grid-cell-input {
     display: block;
+    width: 100%;
 }
 
 .grid-cell-heading {
-    /*width: 6.25%;*/
+    background-color: #eee;
 }
 
 .is-order-asc {
@@ -35,10 +55,6 @@
 
 .is-order-desc {
     background: blue;
-}
-
-.grid-cell-heading {
-	background-color: #eee;
 }
 
 .grid-row:hover {
@@ -51,6 +67,7 @@ body {
 
 .grid-container {
 	margin: 2em 0;
+    overflow-x: scroll;
 }
 
 .grid-form-create-row {
@@ -59,7 +76,6 @@ body {
 
 .grid-form-create-label {
     display: block;
-    font-weight: 600;
     margin-bottom: 5px;
 }
 
@@ -69,4 +85,23 @@ body {
 
 .grid-form-create-select {
     width: 100%;
+}
+
+.grid-search-input {
+    padding: 0 2px;
+}
+
+.grid-cell-heading-name {
+    font-weight: 600;
+}
+
+.grid-pagination-container {
+    padding: 10px 0;
+    font-size: 12px;
+    text-align: center;
+}
+
+.grid-pagination-select {
+    padding: 0px;
+    margin: 0 3px;
 }

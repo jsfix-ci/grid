@@ -7,6 +7,7 @@ var gridBaby = new gridFactory();
 
 gridItem.create({
   id: 'item',
+  perPageOptions: [10, 25, 50, 100, 200],
   url: {
     read: 'request/read.php',
     update: 'request/update.php',
@@ -21,14 +22,18 @@ gridItem.create({
   },
   cols: [
     {
+      width: 10,
       key: 'id',
       name: 'ID',
       primaryKey: true,
       search: true,
       order: true,
-      edit: false
+      edit: false,
+      readTemplate: '<a href="#" class="link-primary">{{.}}</a>'
     },
     {
+      width: 6,
+      search: true,
       key: 'sku',
       name: 'SKU',
       order: true,
@@ -37,27 +42,7 @@ gridItem.create({
       required: true
     },
     {
-      edit: true,
-      order: true,
-      type: 'text',
-      key: 'barcode',
-      name: 'Barcode'
-    },
-    {
-      edit: true,
-      order: true,
-      type: 'text',
-      key: 'altBarcode',
-      name: 'Alt. Code'
-    },
-    {
-      edit: true,
-      order: true,
-      type: 'text',
-      key: 'mpn',
-      name: 'MPN'
-    },
-    {
+      width: 6,
       edit: true,
       order: true,
       type: 'text',
@@ -66,6 +51,7 @@ gridItem.create({
       required: true
     },
     {
+      width: 6,
       order: true,
       type: 'number',
       key: 'stock',
@@ -73,27 +59,9 @@ gridItem.create({
       edit: false
     },
     {
-      type: 'number',
-      key: 'alocStock',
-      name: 'Aloc Stock',
-      edit: false
-    },
-    {
+      width: 6,
       order: true,
-      edit: true,
-      key: 'minStock',
-      name: 'Min Stock',
-      type: 'number',
-      required: true
-    },
-    {
-      edit: true,
-      key: 'location',
-      name: 'Location',
-      selectOptions: {1: 'here', 2: 'there'}
-    },
-    {
-      order: true,
+      search: true,
       edit: true,
       key: 'status',
       name: 'Status',
@@ -105,40 +73,31 @@ gridItem.create({
       }
     },
     {
+      width: 6,
       edit: true,
       key: 'supplier',
       name: 'Supplier',
       search: true,
       selectOptions: {
-        1: 'China',
+        16: 'China',
         2: 'Burnley',
       }
     },
     {
-      order: true,
-      edit: true,
-      key: 'costPrice',
-      name: 'Cst Price',
-      type: 'number'
-    },
-    {
+      width: 6,
       key: 'requiresCount',
       name: 'Rq Count',
       search: true,
       edit: false,
       selectOptions: {
-        yes: 'Yes',
-        no: 'No'
+        Yes: 'Yes',
+        No: 'No'
       }
     },
     {
+      width: 6,
       key: 'print',
       name: 'Print',
-      edit: false
-    },
-    {
-      key: 'composite',
-      name: 'Composite?',
       edit: false
     }
   ]
@@ -146,27 +105,31 @@ gridItem.create({
 
 gridBaby.create({
   id: 'baby',
+  perPageOptions: [10, 25, 50, 100, 150],
   url: {
     read: 'request/read-baby.php',
     update: 'request/update.php',
-    delete: 'request/delete.php',
-    create: 'request/create.php'
+    delete: 'request/delete.php'
   },
   cols: [
     {
+      width: 50,
       key: 'id',
       name: 'ID',
       primaryKey: true,
       search: true,
-      edit: false
+      edit: false,
+      readTemplate: '<a href="#" class="link-primary">{{.}}</a>'
     },
     {
+      width: 20,
       edit: true,
       key: 'cost-price',
       name: 'Cst Price',
       type: 'number'
     },
     {
+      width: 30,
       key: 'composite',
       name: 'Composite?',
       edit: false

@@ -27,11 +27,6 @@ $connection = new \PDO(
 );
 // $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-$sth = $connection->query("select count(id) as rowsTotal from item");
-$sth->setFetchMode(\PDO::FETCH_ASSOC);
-$result = $sth->fetch();
-$rowsTotal = $result['rowsTotal'];
-
 $sql = ["select * from item"];
 
 if (isset($_GET['search']) && is_array($_GET['search'])) {
@@ -54,32 +49,33 @@ if (isset($_GET['order']) && is_array($_GET['order'])) {
 
 $sth = $connection->query(implode(' ', $sql));
 
+$rows = $sth->fetchAll();
+$rowsTotal = count($rows);
+
+// limit
+$rowsPerPage = $_GET['rowsPerPage'];
+$pageCurrent = $_GET['pageCurrent'];
+$start = $rowsPerPage * ($pageCurrent - 1);
+$finish = ($rowsPerPage * $pageCurrent);
+
+$rows = array_slice($rows, $start, $rowsPerPage);
+
 $goodRows = [];
-foreach ($sth->fetchAll() as $row) {
+foreach ($rows as $row) {
 	$goodRows[] = [
 		$row['id'],
 		$row['sku'],
-		$row['barcode'],
-		$row['altBarcode'],
-		$row['mpn'],
 		$row['name'],
 		$row['stock'],
-		5,
-		2,
-		$row['location'],
 		$row['status'],
 		$row['supplier'],
-		$row['costPrice'],
 		$row['requiresCount'],
-		'print me',
-		'yes/no'
+		'print html'
 	];
 }
 
 echo json_encode((object) [
 	'rowsTotal' => $rowsTotal,
-	'pageCurrent' => 1,
-	'rowsPerPage' => 10,
 	'rows' => $goodRows
 ]);
 
