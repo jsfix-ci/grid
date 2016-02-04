@@ -1,9 +1,0 @@
-<select class="{{#classNames}}{{.}} {{/classNames}}">
-
-{{#options}}
-
-	<option value="{{key}}" {{#keySelected}}selected{{/keySelected}}>{{value}}</option>
-
-{{/options}}
-
-</select>
