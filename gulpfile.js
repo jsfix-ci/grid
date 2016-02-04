@@ -21,12 +21,9 @@ gulp.task('css', function () {
 });
 
 gulp.task('js', function(done) {
-  browserify({
-    entries: ['common.js']
-    // paths: ['node_modules']
-  })
-  // .transform('browserify-transform', {global: true})
-  .bundle()
-  .pipe(source('common.js'))
-  .pipe(gulp.dest('asset'));
+  return browserify()
+    .add('common.js')
+    .bundle()
+    .pipe(source('common.js'))
+    .pipe(gulp.dest('asset'));
 });
