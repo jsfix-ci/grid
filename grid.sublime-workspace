@@ -258,12 +258,16 @@
 	"select_project":
 	{
 		"height": 500.0,
-		"last_filter": "",
+		"last_filter": "codex",
 		"selected_items":
 		[
 			[
+				"codex",
+				"/var/www/html/codex/codex.sublime-project"
+			],
+			[
 				"grid",
-				"/var/www/html/grid/grid.sublime-workspace"
+				"/var/www/html/grid/grid.sublime-project"
 			],
 			[
 				"mvc",
