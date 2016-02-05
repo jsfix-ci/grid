@@ -7,22 +7,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "package.json",
-			"settings":
-			{
-				"buffer_size": 956,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gulpfile.js",
-			"settings":
-			{
-				"buffer_size": 772,
-				"line_ending": "Windows"
-			}
-		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -60,10 +44,14 @@
 	],
 	"file_history":
 	[
+		"/var/www/html/grid/gulpfile.js",
+		"/var/www/html/grid/request/read.php",
+		"/var/www/html/grid/common.css",
+		"/var/www/html/grid/package.json"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
@@ -94,69 +82,8 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "package.json",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 956,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								390,
-								954
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JSON.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "gulpfile.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 772,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								772
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -209,12 +136,20 @@
 		"selected_items":
 		[
 			[
-				"gulp",
-				"gulpfile.js"
-			],
-			[
 				"packa",
 				"package.json"
+			],
+			[
+				"read",
+				"request/read.php"
+			],
+			[
+				"common",
+				"common.css"
+			],
+			[
+				"gulp",
+				"gulpfile.js"
 			]
 		],
 		"width": 0.0
@@ -222,15 +157,35 @@
 	"select_project":
 	{
 		"height": 500.0,
-		"last_filter": "",
+		"last_filter": "sto",
 		"selected_items":
 		[
+			[
+				"sto",
+				"/var/www/html/sublime-project/store.sublime-project"
+			],
 			[
 				"",
 				"/var/www/html/dialogue/dialogue.sublime-project"
 			],
 			[
+				"inv",
+				"/var/www/html/sublime-project/inventory.sublime-project"
+			],
+			[
 				"dia",
+				"/var/www/html/dialogue/dialogue.sublime-project"
+			],
+			[
+				"g",
+				"/var/www/html/grid/grid.sublime-project"
+			],
+			[
+				"grid",
+				"/var/www/html/grid/grid.sublime-project"
+			],
+			[
+				"dialo",
 				"/var/www/html/dialogue/dialogue.sublime-project"
 			]
 		],
@@ -252,9 +207,9 @@
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": true,
+	"side_bar_visible": false,
 	"side_bar_width": 150.0,
-	"status_bar_visible": true,
+	"status_bar_visible": false,
 	"template_settings":
 	{
 	}
