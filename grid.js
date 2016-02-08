@@ -81,7 +81,6 @@ Grid.prototype.appendSelectOptionsKeyValue = function() {
 
 Grid.prototype.read = function(event, data) {
 
-
   // clear out old rows
   event.data.$container
     .find(gS(event.data.rowClass))
