@@ -44,6 +44,7 @@
 	],
 	"file_history":
 	[
+		"/var/www/html/grid/package.json.save",
 		"/var/www/html/grid/gulpfile.js",
 		"/var/www/html/grid/request/read.php",
 		"/var/www/html/grid/common.css",
@@ -137,7 +138,7 @@
 		[
 			[
 				"packa",
-				"package.json"
+				"package.json.save"
 			],
 			[
 				"read",
