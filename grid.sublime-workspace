@@ -3,10 +3,6 @@
 	{
 		"selected_items":
 		[
-			[
-				"brow",
-				"browserify-shim"
-			]
 		]
 	},
 	"buffers":
@@ -36,44 +32,23 @@
 	"distraction_free":
 	{
 		"menu_visible": true,
-		"show_minimap": true,
+		"show_minimap": false,
 		"show_open_files": false,
 		"show_tabs": true,
 		"side_bar_visible": false,
 		"status_bar_visible": false
 	},
+	"expanded_folders":
+	[
+		"/var/www/html/grid"
+	],
 	"file_history":
 	[
-		"/var/www/html/grid/asset/common.js",
-		"/var/www/html/grid/grid.js",
-		"/var/www/html/grid/index.php",
-		"/var/www/html/grid/package.json",
-		"/var/www/html/grid/common.js",
+		"/var/www/html/grid/package.json.save",
 		"/var/www/html/grid/gulpfile.js",
-		"/var/www/html/grid/template/grid-form-create.js",
-		"/var/www/html/grid/template/grid-pagination.js",
-		"/var/www/html/grid/template/grid.js",
-		"/var/www/html/grid/grid",
-		"/var/www/html/grid/index-html.php",
+		"/var/www/html/grid/request/read.php",
 		"/var/www/html/grid/common.css",
-		"/var/www/html/grid/node_modules/browserify/node_modules/events/events.js",
-		"/var/www/html/grid/test.js",
-		"/var/www/html/grid/template/grid-pagination.mst",
-		"/var/www/html/grid/grid.mst",
-		"/var/www/html/core/src/Data.php",
-		"/var/www/html/mvc/App/Class/Config.php",
-		"/var/www/html/mvc/App/Class/Model.php",
-		"/var/www/html/mvc/App/Class/System.php",
-		"/var/www/html/mvc/App/Class/Session.php",
-		"/var/www/html/mvc/App/Class/Cron.php",
-		"/var/www/html/mvc/App/Class/Error.php",
-		"/var/www/html/mvc/App/Class/Registry.php",
-		"/var/www/html/mvc/composer.json",
-		"/var/www/html/mvc/.gitignore",
-		"/var/www/html/core/.gitignore",
-		"/var/www/html/core/composer.json",
-		"/var/www/html/core/composer.",
-		"/var/www/html/mvc/index.php"
+		"/var/www/html/grid/package.json"
 	],
 	"find":
 	{
@@ -91,21 +66,6 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"var $ = (typeof window !== \"undefined\" ? window['$'] : typeof global !== \"undefined\" ? global['$'] : null);",
-			".p",
-			"b",
-			"template/grid",
-			"./template/grid",
-			"var $ = require('jquery')",
-			"jQuery JavaScript Library",
-			"$ = require",
-			"browserify",
-			"template",
-			"require('jquery",
-			"eventStream",
-			"rename",
-			"gulp",
-			"OriginalAppName"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -130,7 +90,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 25.0
+		"height": 0.0
 	},
 	"input":
 	{
@@ -164,10 +124,10 @@
 		"height": 0.0
 	},
 	"pinned_build_system": "",
-	"project": "grid",
+	"project": "grid.sublime-project",
 	"replace":
 	{
-		"height": 46.0
+		"height": 0.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -178,79 +138,19 @@
 		[
 			[
 				"packa",
-				"/var/www/html/grid/package.json"
+				"package.json.save"
 			],
 			[
-				"asscomm",
-				"/var/www/html/grid/asset/common.js"
+				"read",
+				"request/read.php"
 			],
 			[
-				"",
-				"/var/www/html/grid/package.json"
-			],
-			[
-				"gulp",
-				"/var/www/html/grid/gulpfile.js"
-			],
-			[
-				"asscommon",
-				"/var/www/html/grid/asset/common.js"
-			],
-			[
-				"grid",
-				"grid"
-			],
-			[
-				"pakc",
-				"package.json"
-			],
-			[
-				"indexht",
-				"index-html.php"
-			],
-			[
-				"index",
-				"index.php"
-			],
-			[
-				"commoncss",
+				"common",
 				"common.css"
 			],
 			[
-				"events",
-				"node_modules/browserify/node_modules/events/events.js"
-			],
-			[
-				"commonjs",
-				"common.js"
-			],
-			[
-				"gridform",
-				"template/grid-form-create.js"
-			],
-			[
-				"gridpagi",
-				"template/grid-pagination.js"
-			],
-			[
-				"gridpagin",
-				"template/grid-pagination.mst"
-			],
-			[
-				"gridms",
-				"grid.mst"
-			],
-			[
-				"pakca",
-				"package.json"
-			],
-			[
-				"gitig",
-				".gitignore"
-			],
-			[
-				"compos",
-				"composer.json"
+				"gulp",
+				"gulpfile.js"
 			]
 		],
 		"width": 0.0
@@ -258,16 +158,36 @@
 	"select_project":
 	{
 		"height": 500.0,
-		"last_filter": "",
+		"last_filter": "sto",
 		"selected_items":
 		[
 			[
-				"grid",
-				"/var/www/html/grid/grid.sublime-workspace"
+				"sto",
+				"/var/www/html/sublime-project/store.sublime-project"
 			],
 			[
-				"mvc",
-				"/var/www/html/sublime/project/mvc.sublime-project"
+				"",
+				"/var/www/html/dialogue/dialogue.sublime-project"
+			],
+			[
+				"inv",
+				"/var/www/html/sublime-project/inventory.sublime-project"
+			],
+			[
+				"dia",
+				"/var/www/html/dialogue/dialogue.sublime-project"
+			],
+			[
+				"g",
+				"/var/www/html/grid/grid.sublime-project"
+			],
+			[
+				"grid",
+				"/var/www/html/grid/grid.sublime-project"
+			],
+			[
+				"dialo",
+				"/var/www/html/dialogue/dialogue.sublime-project"
 			]
 		],
 		"width": 380.0
@@ -289,8 +209,8 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": false,
-	"side_bar_width": 234.0,
-	"status_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": false,
 	"template_settings":
 	{
 	}

@@ -1,0 +1,36 @@
+{
+  "name": "grid",
+  "version": "0.1.0",
+  "description": "grids for every occasion",
+  "main": "grid.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mwyatt/grid.git"
+  },
+  "author": "Martin Wyatt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mwyatt/grid/issues"
+  },
+  "homepage": "https://github.com/mwyatt/grid#readme",
+  "dependencies": {
+    "autoprefixer": "~6.3.1",
+    "browserify": "^11.2.0",
+    "codex": "github	:mwyatt/codex",
+    "dialogue": "mwyatt/dialogue#0.0.1",
+    "gulp-postcss": "^6.0.1",
+    "jquery": "^2.2.0",
+    "mustache": "~2.2.1",
+    "normalize.css": "^3.0.3",
+    "postcss-color-function": "~2.0.0",
+    "postcss-hexrgba": "~0.2.0",
+    "postcss-import": "~8.0.2",
+    "postcss-mixins": "~4.0.0",
+    "postcss-simple-vars": "~1.2.0",
+    "vinyl-source-stream": "~1.1.0"
+  },
+  "devDependencies": {
+    "gulp": "~3.9.0"
+  }
+}
