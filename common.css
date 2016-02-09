@@ -1,11 +1,11 @@
 @charset "utf-8";
 @import "settings.css";
-@import "codex/mixin.css";
-@import "codex/reset.css";
-@import "codex/reusable.css";
-@import "codex/keyframe.css";
-@import "codex/form.css";
-@import "codex/typography.css";
+@import "mwyatt-codex/mixin.css";
+@import "mwyatt-codex/reset.css";
+@import "mwyatt-codex/reusable.css";
+@import "mwyatt-codex/keyframe.css";
+@import "mwyatt-codex/form.css";
+@import "mwyatt-codex/typography.css";
 @import "dialogue.css";
 
 @mixin clearfix .clearfix;

@@ -2,7 +2,7 @@ var $ = require('jquery');
 var mustache = require('mustache');
 var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = require('./templates');
-var dialogueFactory = require('dialogue');
+var dialogueFactory = require('mwyatt-dialogue');
 var dialogueCreate = new dialogueFactory();
 var timeoutId;
 
