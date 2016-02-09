@@ -1,14 +1,14 @@
 {
-  "name": "grid",
-  "version": "0.1.0",
-  "description": "grids for every occasion",
+  "name": "mwyatt-grid",
+  "author": "Martin Wyatt <martin.wyatt@gmail.com>",
+  "version": "0.0.0",
+  "description": "Manage database tables quickly and easily.",
   "main": "grid.js",
   "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mwyatt/grid.git"
   },
-  "author": "Martin Wyatt",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/mwyatt/grid/issues"
@@ -17,22 +17,22 @@
   "dependencies": {
     "jquery": "1.11.2",
     "mustache": "~2.2.1",
-    "codex": "git://github.com/mwyatt/codex#1.0.2",
-    "dialogue": "git://github.com/mwyatt/dialogue#0.0.4"
+    "mwyatt-codex": "0.0.1",
+    "mwyatt-dialogue": "0.0.7"
   },
   "devDependencies": {
-    "gulp": "3.9.0",
-    "browserify": "11.2.0",
     "autoprefixer": "6.0.3",
-    "vinyl-source-stream": "1.1.0",
-    "postcss-mixins": "^1.0.1",
-    "gulp-plumber": "~1.0.1",
-    "gulp-util": "~3.0.7",
+    "browserify": "11.2.0",
+    "es6-promise": "^3.0.2",
+    "gulp": "3.9.0",
+    "gulp-plumber": "^1.0.1",
     "gulp-postcss": "^6.0.1",
+    "gulp-util": "~3.0.7",
     "postcss-color-function": "^2.0.0",
     "postcss-hexrgba": "^0.2.0",
     "postcss-import": "^7.0.0",
+    "postcss-mixins": "^1.0.1",
     "postcss-simple-vars": "^1.0.1",
-    "es6-promise": "~3.0.2"
+    "vinyl-source-stream": "1.1.0"
   }
 }
