@@ -1,17 +1,16 @@
 var $ = require('jquery');
 var gridFactory = require('./grid');
-var gridItem = new gridFactory();
-var gridBaby = new gridFactory();
+var gridPrimary = new gridFactory();
+var gridSecondary = new gridFactory();
 
-
-gridItem.create({
-  id: 'item',
+gridPrimary.create({
+  id: 'primary',
   perPageOptions: [10, 25, 50, 100, 200],
   url: {
-    read: 'request/read.php',
-    update: 'request/update.php',
-    delete: 'request/delete.php',
-    create: 'request/create.php'
+    create: 'request/grid-primary/create.php',
+    read: 'request/grid-primary/read.php',
+    update: 'request/grid-primary/update.php',
+    delete: 'request/grid-primary/delete.php'
   },
   onSelectCell: function(model, type) {
     console.log('onSelectCell', this, model, type);
@@ -102,36 +101,31 @@ gridItem.create({
   ]
 });
 
-gridBaby.create({
-  id: 'baby',
+gridSecondary.create({
+  id: 'secondary',
   perPageOptions: [10, 25, 50, 100, 150],
   url: {
-    read: 'request/read-baby.php',
-    update: 'request/update.php',
-    delete: 'request/delete.php'
+    create: 'request/grid-secondary/create.php',
+    read: 'request/grid-secondary/read.php',
+    update: 'request/grid-secondary/update.php',
+    delete: 'request/grid-secondary/delete.php'
   },
   cols: [
     {
-      width: 50,
       key: 'id',
       name: 'ID',
-      primaryKey: true,
+      primaryKey: true
+    },
+    {
       search: true,
-      edit: false,
-      readTemplate: '<a href="#" class="link-primary">{{.}}</a>'
-    },
-    {
-      width: 20,
       edit: true,
-      key: 'cost-price',
-      name: 'Cst Price',
-      type: 'number'
+      key: 'sku',
+      name: 'SKU'
     },
     {
-      width: 30,
-      key: 'composite',
-      name: 'Composite?',
-      edit: false
+      search: true,
+      key: 'barcode',
+      edit: true
     }
   ]
 });

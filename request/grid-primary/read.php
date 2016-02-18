@@ -1,30 +1,7 @@
 <?php
 
-$credentials = [
-	'database.host' => '',
-	'database.port' => '',
-	'database.basename' => 'inventory_1',
-	'database.username' => 'root',
-	'database.password' => '123'
-];
+$connection = include '../connection.php';
 
-$dataSourceName = [
-    'mysql:host' => $credentials['database.host'],
-    'dbname' => $credentials['database.basename'],
-    'charset' => 'utf8'
-];
-
-foreach ($dataSourceName as $key => $value) {
-    $dataSourceNameStrings[] = $key . '=' . $value;
-}
-
-$dataSourceName = implode(';', $dataSourceNameStrings);
-
-$connection = new \PDO(
-    $dataSourceName,
-    $credentials['database.username'],
-    $credentials['database.password']
-);
 // $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
 $sql = ["select * from item"];
