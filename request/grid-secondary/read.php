@@ -33,8 +33,8 @@ $start = $rowsPerPage * ($pageCurrent - 1);
 $finish = ($rowsPerPage * $pageCurrent);
 
 $sql[] = "limit $start, $finish";
-$query = $this->db->query(implode(' ', $sql));
-$rows = $this->db->get_all_rows($query);
+$sth = $connection->query(implode(' ', $sql));
+$rows = $sth->fetchAll();
 
 $goodRows = [];
 foreach ($rows as $row) {

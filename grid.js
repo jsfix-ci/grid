@@ -98,7 +98,8 @@ Grid.prototype.read = function(event, data) {
     data: data,
     success: function(response) {
       if (
-        typeof response.rowsTotal === 'undefined'
+        typeof response === 'undefined'
+        || typeof response.rowsTotal === 'undefined'
         || typeof response.rows === 'undefined'
       ) {
         return console.warn('read response malformed', response);
