@@ -7,10 +7,10 @@ gridPrimary.create({
   id: 'primary',
   perPageOptions: [10, 25, 50, 100, 200],
   url: {
-    create: 'request/grid-primary/create.php',
-    read: 'request/grid-primary/read.php',
-    update: 'request/grid-primary/update.php',
-    delete: 'request/grid-primary/delete.php'
+    // create: 'request/grid-primary/create.php',
+    read: 'request/grid-primary/read.php'
+    // update: 'request/grid-primary/update.php',
+    // delete: 'request/grid-primary/delete.php'
   },
   onSelectCell: function(model, type) {
     console.log('onSelectCell', this, model, type);
@@ -35,13 +35,13 @@ gridPrimary.create({
       key: 'sku',
       name: 'SKU',
       order: true,
-      edit: true,
+      edit: false,
       type: 'text',
       required: true
     },
     {
       width: 6,
-      edit: true,
+      edit: false,
       order: true,
       type: 'text',
       key: 'name',
@@ -60,7 +60,7 @@ gridPrimary.create({
       width: 6,
       order: true,
       search: true,
-      edit: true,
+      edit: false,
       key: 'status',
       name: 'Status',
       selectOptions: {
@@ -72,7 +72,7 @@ gridPrimary.create({
     },
     {
       width: 6,
-      edit: true,
+      edit: false,
       key: 'supplier',
       name: 'Supplier',
       search: true,
@@ -114,6 +114,7 @@ gridSecondary.create({
     {
       key: 'id',
       name: 'ID',
+      edit: false,
       primaryKey: true
     },
     {
@@ -125,6 +126,7 @@ gridSecondary.create({
     {
       search: true,
       key: 'barcode',
+      name: 'Barcode',
       edit: true
     }
   ]

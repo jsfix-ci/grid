@@ -37,6 +37,13 @@ var Grid = function () {
   this.pageSelectClass = 'js-grid-pagination-select';
   this.perPageSelectClass = 'js-grid-cell-input-perpage';
   this.pageContainerClass = 'js-grid-pagination-container';
+
+  if (typeof localStorage === 'undefined') {
+    console.warn('localStorage is not defined');
+  };
+  if (typeof JSON === 'undefined') {
+    console.warn('JSON is not defined');
+  };
 };
 
 
@@ -46,11 +53,15 @@ Grid.prototype.create = function(options) {
     onSelectRow: function() {},
   };
   this.options = $.extend(defaults, options);
-  this.appendSelectOptionsKeyValue();
+  this.appendSelectOptionsKeyValue({data: this});
 
-  this.rowsPerPage = this.options.perPageOptions[0];
+  this.rowsPerPage = this.getRowsPerPage({data: this});
 
-  this.$container = $(gS(getContainerSelector(this.options.id)));
+  var containerSelector = gS(getContainerSelector(this.options.id));
+  this.$container = $(containerSelector);
+  if (!this.$container.length) {
+    console.warn('container not found in the dom', containerSelector);
+  };
 
   // put grid container in dom
   this.$container.html(mustache.render(mustacheTemplates.grid, this.options));
@@ -58,24 +69,58 @@ Grid.prototype.create = function(options) {
   this.setEvents({data: this});
   this.storeInitialData();
 
-  this.read({data: this}, this.getReadModelDataDefaults({data: this}));
+  this.read({data: this}, this.getFirstReadModel({data: this}));
+};
+
+
+Grid.prototype.getRowsPerPage = function(event) {
+  var storedModel = event.data.getStoredReadModel(event);
+  if ('rowsPerPage' in storedModel) {
+     return storedModel.rowsPerPage;
+  };
+  return this.options.perPageOptions[0];
+};
+
+
+Grid.prototype.getFirstReadModel = function(event) {
+  var storedModel = event.data.getStoredReadModel(event);
+  if (storedModel) {
+    return storedModel;
+  };
+  return event.data.getReadModelDataDefaults(event);
 };
 
 
 // this structure is needed so that you can loop as an array
-Grid.prototype.appendSelectOptionsKeyValue = function() {
+// factors in stored model to render selected items correctly
+Grid.prototype.appendSelectOptionsKeyValue = function(event) {
+  var storedModel = event.data.getStoredReadModel(event);
+
   for (var index = this.options.cols.length - 1; index >= 0; index--) {
-    if ('selectOptions' in this.options.cols[index]) {
-      this.options.cols[index].selectOptionsKeyValue = [];
-      for (var key in this.options.cols[index].selectOptions) {
-        var value = this.options.cols[index].selectOptions[key];
-        this.options.cols[index].selectOptionsKeyValue.push({
+    var model = this.options.cols[index];
+
+    if ('selectOptions' in model) {
+      model.selectOptionsKeyValue = [];
+      for (var key in model.selectOptions) {
+        var value = model.selectOptions[key];
+        var selected = 'search' in storedModel && model.key in storedModel.search && storedModel.search[model.key] == value;
+        model.selectOptionsKeyValue.push({
+          selected: selected,
           key: key,
           value: value
         });
       };
     };
+
+    if ('search' in model && model.search) {
+      if ('search' in storedModel && model.key in storedModel.search) {
+        model.searchDefaultValue = storedModel.search[model.key];
+      };
+    };
+    this.options.cols[index] = model;
   };
+
+
 };
 
 
@@ -107,6 +152,7 @@ Grid.prototype.read = function(event, data) {
 
       event.data.readRender(event, response.rows);
       event.data.renderPagination(event, response);
+      event.data.storeReadModel(event, data);
 
       // get back
       // current page #
@@ -189,7 +235,7 @@ Grid.prototype.readRender = function(event, rows) {
     };
   };
 
-  event.data.$container.find(gS('js-grid-row-heading')).after(mustache.render(mustacheTemplates.rows, rows));
+  event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
 };
 
 
@@ -228,7 +274,9 @@ Grid.prototype.setEvents = function(event) {
   });
 
   // search select
-  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, event.data.keySearchInput);
+  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, function(event) {
+    event.data.buildReadModel(event);
+  });
 
   // search field clicking dont order heading
   event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchFieldClass), event.data, function (event) {
@@ -320,12 +368,9 @@ Grid.prototype.mouseHeadingCell = function(event) {
 
 Grid.prototype.keySearchInput = function(event) {
   var $searchInput = $(this);
-  clearTimeout(timeoutId);
-  timeoutId = setTimeout(function() {
-    if ($searchInput.val()) {
-      event.data.buildReadModel(event);
-    };
-  }, 400);
+  if (event.which == keyCode.enter) {
+    event.data.buildReadModel(event);
+  };
 };
 
 
@@ -601,6 +646,64 @@ Grid.prototype.cellSelect = function(event, $cell) {
 
   $cell.select();
 };
+
+
+Grid.prototype.getStorageKey = function(event) {
+  return 'mwyatt-grid-' + event.data.options.id;
+}
+
+
+// reverse engineer the stored model on to the interface
+Grid.prototype.getStoredReadModel = function(event) {
+  var readModel = JSON.parse(localStorage.getItem(event.data.getStorageKey(event)));
+
+  // search: {},
+  // order: {},
+  // rowsPerPage: event.data.rowsPerPage,
+  // pageCurrent: 1
+
+  // if ('pageCurrent' in readModel) {
+  //   var $options = event.data.$container
+  //     .find(gS(event.data.pageSelectClass))
+  //     .find('option');
+
+  //     for (var index = $options.length - 1; index >= 0; index--) {
+  //       var $option = $($options[index]);
+  //       if (readModel.pageCurrent == $option.val()) {
+  //         $option.prop('selected', 'selected');
+  //       };
+  //     };
+  // };
+
+  // if ('rowsPerPage' in readModel) {
+  //   var $options = event.data.$container
+  //     .find(gS(event.data.perPageSelectClass))
+  //     .find('option');
+
+  //     for (var index = $options.length - 1; index >= 0; index--) {
+  //       var $option = $($options[index]);
+  //       if (readModel.rowsPerPage == $option.val()) {
+  //         $option.prop('selected', 'selected');
+  //       };
+  //     };
+  // };
+
+  // if ('search' in readModel) {
+  //   for (var key in readModel.search) {
+  //     event.data.$container
+  //       .find(gS(event.data.cellHeadingClass + '[data-key="' + key + '"]'))
+  //       .find(gS(event.data.searchFieldClass))
+  //       .val(readModel.search[key]);
+  //   };
+  // };
+
+  return typeof readModel === 'undefined' ? {} : readModel;
+}
+
+
+Grid.prototype.storeReadModel = function(event, model) {
+  localStorage.setItem(event.data.getStorageKey(event), JSON.stringify(model));
+}
 
 
 module.exports = Grid;
