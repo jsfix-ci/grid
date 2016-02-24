@@ -697,7 +697,7 @@ Grid.prototype.getStoredReadModel = function(event) {
   //   };
   // };
 
-  return typeof readModel === 'undefined' ? {} : readModel;
+  return readModel ? readModel : {};
 }
 
 
