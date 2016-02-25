@@ -5,6 +5,8 @@ var mustacheTemplates = require('./templates');
 var dialogueFactory = require('mwyatt-dialogue');
 var dialogueCreate = new dialogueFactory();
 var timeoutId;
+var feedbackQueueFactory = require('mwyatt-codex/feedbackQueue');
+var feedbackQueue = new feedbackQueueFactory();
 
 
 // obtains css selector version of a class name
@@ -27,6 +29,7 @@ function getContainerSelector (id) {
 var Grid = function () {
   this.selectedClass = 'is-selected';
   this.cellHeadingClass = 'js-grid-cell-heading';
+  this.tableClass = 'js-grid-table';
   this.rowClass = 'js-grid-row';
   this.rowHeadingClass = 'js-grid-row-heading';
   this.cellClass = 'js-grid-cell';
@@ -37,6 +40,8 @@ var Grid = function () {
   this.pageSelectClass = 'js-grid-pagination-select';
   this.perPageSelectClass = 'js-grid-cell-input-perpage';
   this.pageContainerClass = 'js-grid-pagination-container';
+  this.buttonRemoveFiltersClass = 'js-grid-button-remove-filters';
+  this.spinnerClass = 'js-grid-spinner';
 
   if (typeof localStorage === 'undefined') {
     console.warn('localStorage is not defined');
@@ -53,6 +58,7 @@ Grid.prototype.create = function(options) {
     onSelectRow: function() {},
   };
   this.options = $.extend(defaults, options);
+  this.optionsOriginal = $.extend(true, {}, this.options); // true = deep copy
   this.appendSelectOptionsKeyValue({data: this});
 
   this.rowsPerPage = this.getRowsPerPage({data: this});
@@ -78,13 +84,14 @@ Grid.prototype.getRowsPerPage = function(event) {
   if ('rowsPerPage' in storedModel) {
      return storedModel.rowsPerPage;
   };
-  return this.options.perPageOptions[0];
+  return event.data.options.perPageOptions[0];
 };
 
 
 Grid.prototype.getFirstReadModel = function(event) {
   var storedModel = event.data.getStoredReadModel(event);
-  if (storedModel) {
+  if (!$.isEmptyObject(storedModel)) {
+    event.data.markContainerFiltering(event, storedModel);
     return storedModel;
   };
   return event.data.getReadModelDataDefaults(event);
@@ -119,8 +126,6 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
     };
     this.options.cols[index] = model;
   };
-
-
 };
 
 
@@ -131,9 +136,10 @@ Grid.prototype.read = function(event, data) {
     .find(gS(event.data.rowClass))
     .remove();
 
-  // event.data.$container
-  //   .find(gS('js-grid-row-heading'))
-  //   .after('Loading ...');
+  // spin time
+  event.data.$container
+    .find(gS(event.data.tableClass))
+    .after(mustache.render(mustacheTemplates.spinner));
 
   // get new fun rows
   $.ajax({
@@ -141,6 +147,9 @@ Grid.prototype.read = function(event, data) {
     url: event.data.options.url.read,
     dataType: 'json',
     data: data,
+    complete: function() {
+      event.data.$container.find(gS(event.data.spinnerClass)).remove();
+    },
     success: function(response) {
       if (
         typeof response === 'undefined'
@@ -196,6 +205,7 @@ Grid.prototype.renderPagination = function(event, response) {
       possiblePages: possiblePages,
       selectPages: {options: options, classNames: ['grid-pagination-select', event.data.pageSelectClass]},
       selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', event.data.perPageSelectClass]},
+      rowsTotal: rowsTotal
     }, {select: mustacheTemplates.select}));
 };
 
@@ -236,6 +246,13 @@ Grid.prototype.readRender = function(event, rows) {
   };
 
   event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
+  
+  event.data.$container.find(gS('js-grid-no-rows')).remove();
+  if (!rows.length) {
+      event.data.$container
+        .find(gS(event.data.tableClass))
+        .after(mustache.render('<div class="grid-no-rows js-grid-no-rows"><p>No Results, <span class="link-primary js-grid-button-remove-filters">Remove Filters</span>.</p></div>'));
+  };
 };
 
 
@@ -260,7 +277,10 @@ Grid.prototype.setEvents = function(event) {
   event.data.$container.on('mousedown.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
 
   // search input
-  event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, event.data.keySearchInput);
+  event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function(event) {
+    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
+    event.data.keySearchInput(event);
+  });
 
   // keyup on a edit input
   event.data.$container.on('keyup.grid-' + event.data.options.id, event.data, function(event) {
@@ -275,6 +295,7 @@ Grid.prototype.setEvents = function(event) {
 
   // search select
   event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, function(event) {
+    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
     event.data.buildReadModel(event);
   });
 
@@ -290,7 +311,20 @@ Grid.prototype.setEvents = function(event) {
   event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.pageSelectClass), event.data, event.data.buildReadModel);
 
   // change per page
-  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.perPageSelectClass), event.data, event.data.buildReadModel);
+  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.perPageSelectClass), event.data, function() {
+    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
+    event.data.buildReadModel(event);
+  });
+
+  // remove all filtering
+  // could make a render from scratch function?
+  event.data.$container.on('click.grid-' + event.data.options.id, gS(event.data.buttonRemoveFiltersClass), event.data, function() {
+    event.data.options = event.data.optionsOriginal;
+    event.data.storeReadModel(event, event.data.getReadModelDataDefaults(event));
+    event.data.appendSelectOptionsKeyValue(event);
+    event.data.$container.html(mustache.render(mustacheTemplates.grid, event.data.options));
+    event.data.buildReadModel(event);
+  });
 
   event.data.$container.on('click.grid-' + event.data.options.id, gS('js-grid-button-create'), event.data, function(event) {
 
@@ -305,13 +339,7 @@ Grid.prototype.setEvents = function(event) {
           this.close();
         },
         'Create': function() {
-          var data = [];
-          var $formCreateCells = $('.js-form-create-cell');
-          for (var index = $formCreateCells.length - 1; index >= 0; index--) {
-            var $formCreateCell = $($formCreateCells[index]);
-            data[$formCreateCell.prop('name')] = $formCreateCell.val();
-          };
-          
+          event.data.createRow(event);
         }
       }
     });
@@ -354,12 +382,12 @@ Grid.prototype.mouseHeadingCell = function(event) {
   };
 
   $cell
-    .removeClass('is-order-asc')
-    .removeClass('is-order-desc')
+    .removeClass('grid-heading-is-order-asc')
+    .removeClass('grid-heading-is-order-desc')
     .data(dataKey, orderNew);
 
   if (orderNew) {
-    $cell.addClass('is-order-' + orderNew);
+    $cell.addClass('grid-heading-is-order-' + orderNew);
   };
 
   event.data.buildReadModel(event);
@@ -392,13 +420,13 @@ Grid.prototype.buildReadModel = function(event) {
   var data = event.data.getReadModelDataDefaults(event);
 
   // page
-  $pageSelect = $(gS(event.data.pageSelectClass));
+  $pageSelect = event.data.$container.find(gS(event.data.pageSelectClass));
   if ($pageSelect.length) {
     data.pageCurrent = $pageSelect.val();
   };
 
   // per page
-  $perPageSelect = $(gS(event.data.perPageSelectClass));
+  $perPageSelect = event.data.$container.find(gS(event.data.perPageSelectClass));
   if ($perPageSelect.length) {
     data.rowsPerPage = $perPageSelect.val();
     event.data.rowsPerPage = $perPageSelect.val(); // store in memory
@@ -428,7 +456,17 @@ Grid.prototype.buildReadModel = function(event) {
     };
   };
 
+  event.data.markContainerFiltering(event, data);
   event.data.read(event, data);
+};
+
+
+// flag container as being filtered
+Grid.prototype.markContainerFiltering = function(event, readModel) {
+  event.data.$container.removeClass('grid-is-filtering');
+  if (('search' in readModel && !$.isEmptyObject(readModel.search)) || ('order' in readModel && !$.isEmptyObject(readModel.order))) {
+    event.data.$container.addClass('grid-is-filtering');
+  };
 };
 
 
@@ -545,7 +583,8 @@ Grid.prototype.cellDeselect = function(event) {
   // perform persist update
   data = {};
   data[event.data.primaryKey] = primaryKeyValue;
-  data[model.key] = newValue;
+  data['name'] = model.key;
+  data['value'] = newValue;
 
   event.data.update(event, data);
 };
@@ -556,13 +595,43 @@ Grid.prototype.update = function(event, data) {
   $.ajax({
     type: 'get',
     url: event.data.options.url.update,
-    dataType: 'html',
+    dataType: 'json',
     data: data,
     success: function(response) {
-      console.log('updated');
+      if ('rowCount' in response && response.rowCount == 1) {
+        feedbackQueue.createMessage({message: 'Updated row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'});
+      };
     },
     error: function(response) {
-      console.log('not updated');
+      feedbackQueue.createMessage({message: 'There was a problem while updating the row.'});
+    }
+  });
+};
+
+
+Grid.prototype.createRow = function(event) {
+  var data = {columns: {}};
+  var $formCreateCells = $('.js-form-create-cell');
+  for (var index = $formCreateCells.length - 1; index >= 0; index--) {
+    var $formCreateCell = $($formCreateCells[index]);
+    data.columns[$formCreateCell.prop('name')] = $formCreateCell.val();
+  };
+
+  $.ajax({
+    type: 'get',
+    url: event.data.options.url.create,
+    dataType: 'json',
+    data: data,
+    success: function(response) {
+      if ('rowCount' in response && response.rowCount == 1) {
+        feedbackQueue.createMessage({message: 'Created row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'});
+        dialogueCreate.close();
+      } else {
+        feedbackQueue.createMessage({message: 'Row was not created.'});
+      };
+    },
+    error: function(response) {
+      feedbackQueue.createMessage({message: 'There was a problem while creating the row.'});
     }
   });
 };
@@ -572,7 +641,7 @@ Grid.prototype.update = function(event, data) {
 Grid.prototype.getSelectedRowPrimaryValue = function(event) {
   var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
   var $selectedCell = $selectedRow.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
-  var $primaryHeadingCell = $(gS(event.data.cellHeadingClass) + '[data-key="' + event.data.primaryKey + '"]');
+  var $primaryHeadingCell = event.data.$container.find(gS(event.data.cellHeadingClass) + '[data-key="' + event.data.primaryKey + '"]');
   var $primaryCell = $selectedRow.find(gS(event.data.cellClass)).eq($primaryHeadingCell.index());
   return $primaryCell.data('value');
 };
@@ -653,50 +722,10 @@ Grid.prototype.getStorageKey = function(event) {
 }
 
 
-// reverse engineer the stored model on to the interface
+// return the last performed read model
+// defaults to empty object
 Grid.prototype.getStoredReadModel = function(event) {
   var readModel = JSON.parse(localStorage.getItem(event.data.getStorageKey(event)));
-
-  // search: {},
-  // order: {},
-  // rowsPerPage: event.data.rowsPerPage,
-  // pageCurrent: 1
-
-  // if ('pageCurrent' in readModel) {
-  //   var $options = event.data.$container
-  //     .find(gS(event.data.pageSelectClass))
-  //     .find('option');
-
-  //     for (var index = $options.length - 1; index >= 0; index--) {
-  //       var $option = $($options[index]);
-  //       if (readModel.pageCurrent == $option.val()) {
-  //         $option.prop('selected', 'selected');
-  //       };
-  //     };
-  // };
-
-  // if ('rowsPerPage' in readModel) {
-  //   var $options = event.data.$container
-  //     .find(gS(event.data.perPageSelectClass))
-  //     .find('option');
-
-  //     for (var index = $options.length - 1; index >= 0; index--) {
-  //       var $option = $($options[index]);
-  //       if (readModel.rowsPerPage == $option.val()) {
-  //         $option.prop('selected', 'selected');
-  //       };
-  //     };
-  // };
-
-  // if ('search' in readModel) {
-  //   for (var key in readModel.search) {
-  //     event.data.$container
-  //       .find(gS(event.data.cellHeadingClass + '[data-key="' + key + '"]'))
-  //       .find(gS(event.data.searchFieldClass))
-  //       .val(readModel.search[key]);
-  //   };
-  // };
-
   return readModel ? readModel : {};
 }
 

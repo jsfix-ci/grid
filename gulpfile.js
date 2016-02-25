@@ -32,6 +32,11 @@ gulp.src = function() {
   );
 };
 
+gulp.task('default', function () {
+  gulp.task('css');
+  gulp.task('js');
+});
+
 gulp.task('css', function () {
   return gulp.src('common.css')
     .pipe(postcss(processes))

@@ -120,11 +120,13 @@ gridSecondary.create({
     {
       search: true,
       edit: true,
+      type: 'text',
       key: 'sku',
       name: 'SKU'
     },
     {
       search: true,
+      type: 'number',
       key: 'barcode',
       name: 'Barcode',
       edit: true

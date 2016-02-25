@@ -17,7 +17,7 @@
   "dependencies": {
     "jquery": "1.11.2",
     "mustache": "~2.2.1",
-    "mwyatt-codex": "0.0.1",
+    "mwyatt-codex": "0.1.0",
     "mwyatt-dialogue": "^0.2.0"
   },
   "devDependencies": {

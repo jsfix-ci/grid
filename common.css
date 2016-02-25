@@ -6,6 +6,7 @@
 @import "mwyatt-codex/keyframe.css";
 @import "mwyatt-codex/form.css";
 @import "mwyatt-codex/typography.css";
+@import "mwyatt-codex/feedback-queue.css";
 @import "dialogue.css";
 
 @mixin clearfix .clearfix;
@@ -15,7 +16,7 @@
 }
 
 .grid-cell-base {
-    padding: 3px;
+    padding: 5px;
     border: 1px solid #ccc;
     font-size: 12px;
 }
@@ -103,4 +104,90 @@ body {
 .grid-pagination-select {
     padding: 0px;
     margin: 0 3px;
+}
+
+.grid-is-filtering .grid-button-remove-filters {
+    display: block;
+}
+
+.grid-button-remove-filters {
+    display: none;
+    float: right;
+    font-size: 12px;
+    background: red;
+    padding: 3px 5px;
+    margin-bottom: 5px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.grid-spinner {
+  padding: 40px;
+}
+
+.grid-spinner-single {
+  animation: rotateFull 0.5s infinite linear;
+  height: 26px;
+  width: 26px;
+  margin: 0 auto;
+  position: relative;
+  border-left-color: #ccc;
+  border-right-color: #ccc;
+  border-bottom-color: #ccc;
+  border-top-color: #eee;
+  border-radius: 100%;
+  border-width: 4px;
+  border-style: solid;
+}
+
+@keyframes rotateFull {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(359deg); }
+}
+
+.grid-total-rows {
+    float: right;
+}
+
+.grid-total-rows:before {
+    content: "Total:";
+    margin-right: 4px;
+    font-weight: 600;
+}
+
+.grid-cell-heading-orderable {
+    cursor: pointer;
+}
+
+.grid-heading-is-order-desc .grid-cell-heading-name:before,
+.grid-heading-is-order-asc .grid-cell-heading-name:before {
+    display: block;
+}
+
+.grid-heading-is-order-desc .grid-cell-heading-name:before {
+    border-top-color: transparent;
+    bottom: 1px;
+}
+
+.grid-heading-is-order-asc .grid-cell-heading-name:before {
+    border-bottom-color: transparent;
+    bottom: -4px;
+}
+
+.grid-cell-heading-name:before {
+    display: none;
+    width: 10px;
+    border-width: 5px;
+    border-style: solid;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    content: "";
+    float: right;
+    position: relative;
+    right: 4px;
+}
+
+.grid-no-rows {
+    padding: 40px;
+    text-align: center;
 }
