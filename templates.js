@@ -20,8 +20,6 @@ templates.rows = [
   '{{/.}}'
 ].join('\n');
 
-
-
 templates.formCreate = [
   '<form class="grid-form-create js-grid-form-create">',
   '{{#.}}',
