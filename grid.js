@@ -211,7 +211,8 @@ Grid.prototype.renderPagination = function(event, response) {
 
 
 Grid.prototype.getPageCurrent = function(event) {
-  return parseInt(event.data.$container.find(gS(event.data.pageSelectClass)).val());
+  var pageCurrent = parseInt(event.data.$container.find(gS(event.data.pageSelectClass)).val());
+  return pageCurrent > 0 ? pageCurrent : 1;
 };
 
 
@@ -274,7 +275,7 @@ Grid.prototype.setEvents = function(event) {
 
   // clicking the document
   // could be a cell or row!
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
+  event.data.$container.on('mouseup.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
 
   // search input
   event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function(event) {
@@ -287,9 +288,9 @@ Grid.prototype.setEvents = function(event) {
 
     // enter key and a cell is being edited
     if (keyCode.enter == event.which && event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass))) {
-      event.data.cellDeselect(event);
+      event.data.cellDeselect(event, true);
     } else if (keyCode.esc == event.which) {
-      // event.data.cellDeselectNoSave(event);
+      event.data.cellDeselect(event, false);
     };
   });
 
@@ -486,7 +487,7 @@ Grid.prototype.mouseDocument = function(event) {
   // is cell and not selected
   // deselect then select
   if ($target.hasClass(event.data.cellClass)) {
-    event.data.cellDeselect(event);
+    event.data.cellDeselect(event, true);
     event.data.cellSelect(event, $target);
   };
 };
@@ -528,8 +529,9 @@ Grid.prototype.rowDeselect = function(event) {
 
 
 // deselect cell and persist
-Grid.prototype.cellDeselect = function(event) {
+Grid.prototype.cellDeselect = function(event, persist) {
   var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
+  var wasChanged;
 
   if (!$selectedRow.length) {
     return;
@@ -557,6 +559,12 @@ Grid.prototype.cellDeselect = function(event) {
   var $selectedCellInput = $selectedCell.find(gS(event.data.inputClass));
   var newValue = $selectedCellInput.val();
 
+  if (newValue == $selectedCell.data('value')) {
+    wasChanged = false;
+  } else {
+    wasChanged = true;
+  };
+
   // get selected option html
   var type = event.data.getInputTypeFromModel(model);
   var cellHtml;
@@ -580,13 +588,16 @@ Grid.prototype.cellDeselect = function(event) {
     .data('value', newValue)
     .html(cellHtml);
 
-  // perform persist update
-  data = {};
-  data[event.data.primaryKey] = primaryKeyValue;
-  data['name'] = model.key;
-  data['value'] = newValue;
+  if (persist && wasChanged) {
 
-  event.data.update(event, data);
+    // perform persist update
+    data = {};
+    data[event.data.primaryKey] = primaryKeyValue;
+    data['name'] = model.key;
+    data['value'] = newValue;
+
+    event.data.update(event, data);
+  };
 };
 
 
@@ -705,15 +716,11 @@ Grid.prototype.cellSelect = function(event, $cell) {
     };
   } else {
     template = mustacheTemplates.input;
-    data = {type: type, value: $cell.data('value')};
+    data = {type: 'text', value: $cell.data('value')};
   };
   
-  $cell
-    .html(mustache.render(template, data))
-    .find(gS(event.data.inputClass))
-    .focus();
-
-  $cell.select();
+  $cell.html(mustache.render(template, data));
+  $cell.find(gS(event.data.inputClass)).val($cell.data('value')).focus().select();
 };
 
 
