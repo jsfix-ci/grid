@@ -289,9 +289,9 @@ Grid.prototype.setEvents = function(event) {
 
     // enter key and a cell is being edited
     if (keyCode.enter == event.which && event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass))) {
-      event.data.cellDeselect(event, true);
+      event.data.cellDeselect(event, {persist: true});
     } else if (keyCode.esc == event.which) {
-      event.data.cellDeselect(event, false);
+      event.data.cellDeselect(event, {revert: true});
     };
   });
 
@@ -477,7 +477,7 @@ Grid.prototype.mouseDocument = function(event) {
 
   // no target
   if (!$target.length) {
-    return event.data.cellDeselect();
+    return event.data.cellDeselect(event);
   };
   
   // is cell and selected
@@ -488,7 +488,7 @@ Grid.prototype.mouseDocument = function(event) {
   // is cell and not selected
   // deselect then select
   if ($target.hasClass(event.data.cellClass)) {
-    event.data.cellDeselect(event, true);
+    event.data.cellDeselect(event, {persist: true});
     event.data.cellSelect(event, $target);
   };
 };
@@ -530,7 +530,13 @@ Grid.prototype.rowDeselect = function(event) {
 
 
 // deselect cell and persist
-Grid.prototype.cellDeselect = function(event, persist) {
+Grid.prototype.cellDeselect = function(event, options) {
+  var defaults = {
+    persist: false,
+    revert: false
+  };
+  options = $.extend(defaults, typeof options === 'undefined' ? {} : options);
+
   var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
   var wasChanged;
 
@@ -559,37 +565,41 @@ Grid.prototype.cellDeselect = function(event, persist) {
 
   var $selectedCellInput = $selectedCell.find(gS(event.data.inputClass));
   var newValue = $selectedCellInput.val();
-
-  if (newValue == $selectedCell.data('value')) {
-    wasChanged = false;
-  } else {
-    wasChanged = true;
-  };
-
-  // get selected option html
-  var type = event.data.getInputTypeFromModel(model);
   var cellHtml;
 
-  // select needs to get the display name from the key
-  if (type == 'select') {
-    for (var key in model.selectOptions) {
-      if (key == newValue) {
-        cellHtml = model.selectOptions[key];
-      };
+  if (options.revert) {
+    cellHtml = $selectedCell.data('value');
+  } else {
+    if (newValue == $selectedCell.data('value')) {
+      wasChanged = false;
+    } else {
+      wasChanged = true;
     };
 
-  // store the new value in data
-  // put in html the display name of it
-  } else {
-    cellHtml = newValue;
+    // get selected option html
+    var type = event.data.getInputTypeFromModel(model);
+
+    // select needs to get the display name from the key
+    if (type == 'select') {
+      for (var key in model.selectOptions) {
+        if (key == newValue) {
+          cellHtml = model.selectOptions[key];
+        };
+      };
+
+    // store the new value in data
+    // put in html the display name of it
+    } else {
+      cellHtml = newValue;
+    };
+
+    // store inside data
+    $selectedCell.data('value', newValue);
   };
 
-  // store inside data
-  $selectedCell
-    .data('value', newValue)
-    .html(cellHtml);
+  $selectedCell.html(cellHtml);
 
-  if (persist && wasChanged) {
+  if (options.persist && wasChanged) {
 
     // perform persist update
     data = {};
