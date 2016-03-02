@@ -188,6 +188,7 @@ Grid.prototype.renderPagination = function(event, response) {
 
   // lowest will be 1
   possiblePages = Math.ceil(rowsTotal / rowsPerPage);
+  possiblePages = possiblePages < 1 ? 1 : possiblePages;
 
   var options = [];
   for (var index = 1; index <= possiblePages; index++) {
