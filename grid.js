@@ -4,6 +4,7 @@ var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = require('./templates');
 var dialogueFactory = require('mwyatt-dialogue');
 var dialogueCreate = new dialogueFactory();
+var dialogue = new dialogueFactory();
 var timeoutId;
 var feedbackQueueFactory = require('mwyatt-codex/feedbackQueue');
 var feedbackQueue = new feedbackQueueFactory();
@@ -42,6 +43,7 @@ var Grid = function () {
   this.pageContainerClass = 'js-grid-pagination-container';
   this.buttonRemoveFiltersClass = 'js-grid-button-remove-filters';
   this.spinnerClass = 'js-grid-spinner';
+  this.buttonDeleteClass = 'js-grid-row-button-delete';
 
   if (typeof localStorage === 'undefined') {
     console.warn('localStorage is not defined');
@@ -250,10 +252,20 @@ Grid.prototype.readRender = function(event, rows) {
   event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
   
   event.data.$container.find(gS('js-grid-no-rows')).remove();
-  if (!rows.length) {
-      event.data.$container
-        .find(gS(event.data.tableClass))
-        .after(mustache.render('<div class="grid-no-rows js-grid-no-rows"><p>No Results, <span class="link-primary js-grid-button-remove-filters">Remove Filters</span>.</p></div>'));
+  if (rows.length) {
+
+    // attach delete button
+    if ('delete' in event.data.options.url) {
+      var $rows = event.data.$container.find(gS(event.data.rowClass));
+      for (var index = $rows.length - 1; index >= 0; index--) {
+        var $row = $($rows[index]);
+        $row.find(gS(event.data.cellClass)).last().append(mustache.render(mustacheTemplates.deleteButton));
+      };
+    };
+  } else {
+    event.data.$container
+      .find(gS(event.data.tableClass))
+      .after(mustache.render('<div class="grid-no-rows js-grid-no-rows"><p>No Results, <span class="link-primary js-grid-button-remove-filters">Remove Filters</span>.</p></div>'));
   };
 };
 
@@ -269,6 +281,47 @@ Grid.prototype.storeInitialData = function() {
 };
 
 
+Grid.prototype.deleteRow = function(event) {
+  var data = {};
+  var $trigger = $(this);
+  event.data.selectRowByCell(event, $trigger.closest(gS(event.data.cellClass)));
+  data[event.data.primaryKey] = event.data.getSelectedRowPrimaryValue(event);
+
+  dialogue.create({
+    positionTo: $trigger,
+    className: 'dialogue-grid-delete',
+    width: 200,
+    title: 'Delete Row',
+    description: 'Are you sure you want to delete this row?',
+    actions: {
+      'Cancel': function() {
+        this.close();
+      },
+      'Delete': function() {
+        $.ajax({
+          type: 'get',
+          url: event.data.options.url.delete,
+          dataType: 'json',
+          data: data,
+          success: function(response) {
+            if ('rowCount' in response && response.rowCount == 1) {
+              feedbackQueue.createMessage({message: 'Deleted row \'' + data[event.data.primaryKey] + '\'.', type: 'success'});
+            } else {
+              feedbackQueue.createMessage({message: 'Row \'' + data[event.data.primaryKey] + '\' already deleted.'});
+            };
+            dialogue.close();
+            event.data.buildReadModel(event);
+          },
+          error: function(response) {
+            feedbackQueue.createMessage({message: 'There was a problem while deleting the row.'});
+          }
+        });
+      }
+    }
+  });
+};
+
+
 Grid.prototype.setEvents = function(event) {
 
   // selecting a cell
@@ -277,6 +330,8 @@ Grid.prototype.setEvents = function(event) {
   // clicking the document
   // could be a cell or row!
   event.data.$container.on('mouseup.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
+
+  event.data.$container.on('click.grid-' + event.data.options.id, gS(event.data.buttonDeleteClass), event.data, event.data.deleteRow);
 
   // search input
   event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function(event) {

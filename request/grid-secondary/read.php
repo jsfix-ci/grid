@@ -30,9 +30,8 @@ $rowsTotal = $sth->rowCount();
 $rowsPerPage = $_GET['rowsPerPage'];
 $pageCurrent = $_GET['pageCurrent'];
 $start = $rowsPerPage * ($pageCurrent - 1);
-$finish = ($rowsPerPage * $pageCurrent);
 
-$sql[] = "limit $start, $finish";
+$sql[] = "limit $start, $rowsPerPage";
 $sth = $connection->query(implode(' ', $sql));
 $rows = $sth->fetchAll();
 

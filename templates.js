@@ -1,4 +1,5 @@
 var templates = {
+  deleteButton: '<span title="Delete row" class="grid-row-button-delete js-grid-row-button-delete">&times;</span>',
   input: '<input class="grid-cell-input js-grid-cell-input" type="{{type}}" value="{{value}}">',
   select: '<select class="{{#classNames}}{{.}} {{/classNames}}">{{#options}}<option value="{{key}}" {{#keySelected}}selected{{/keySelected}}>{{value}}</option>{{/options}}</select>',
   spinner: '<div class="grid-spinner js-grid-spinner"><div class="grid-spinner-single"></div></div>'
