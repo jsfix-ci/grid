@@ -1,4 +1,5 @@
 var templates = {
+  noRowsPane: '<div class="grid-no-rows js-grid-no-rows"><p>No Results, <span class="link-primary js-grid-button-remove-filters">Remove Filters</span>.</p></div>',
   deleteButton: '<span title="Delete row" class="grid-row-button-delete js-grid-row-button-delete">&times;</span>',
   input: '<input class="grid-cell-input js-grid-cell-input" type="{{type}}" value="{{value}}">',
   select: '<select class="{{#classNames}}{{.}} {{/classNames}}">{{#options}}<option value="{{key}}" {{#keySelected}}selected{{/keySelected}}>{{value}}</option>{{/options}}</select>',

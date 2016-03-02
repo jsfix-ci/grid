@@ -133,6 +133,9 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
 
 Grid.prototype.read = function(event, data) {
 
+  // clear out no results pane
+  event.data.$container.find(gS('js-grid-no-rows')).remove();
+
   // clear out old rows
   event.data.$container
     .find(gS(event.data.rowClass))
@@ -251,7 +254,6 @@ Grid.prototype.readRender = function(event, rows) {
 
   event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
   
-  event.data.$container.find(gS('js-grid-no-rows')).remove();
   if (rows.length) {
 
     // attach delete button
@@ -265,7 +267,7 @@ Grid.prototype.readRender = function(event, rows) {
   } else {
     event.data.$container
       .find(gS(event.data.tableClass))
-      .after(mustache.render('<div class="grid-no-rows js-grid-no-rows"><p>No Results, <span class="link-primary js-grid-button-remove-filters">Remove Filters</span>.</p></div>'));
+      .after(mustache.render(mustache.render(mustacheTemplates.noRowsPane)));
   };
 };
 
@@ -701,8 +703,9 @@ Grid.prototype.createRow = function(event) {
     data: data,
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
-        feedbackQueue.createMessage({message: 'Created row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'});
+        feedbackQueue.createMessage({message: 'Created row.', type: 'success'});
         dialogueCreate.close();
+        event.data.buildReadModel(event);
       } else {
         feedbackQueue.createMessage({message: 'Row was not created.'});
       };
