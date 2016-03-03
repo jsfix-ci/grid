@@ -16,12 +16,12 @@ tinymce.init({
   content_css: [
     '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
     '//www.tinymce.com/css/codepen.min.css'
-  ]
-});
-
-// New event
-tinymce.editor.on('init', function(args) {
-    console.log('value');
+  ],
+  setup: function(editor) {
+    editor.on('init', function() {
+      console.log('initted');
+    });
+  }
 });
 
 gridPrimary.create({
