@@ -5,10 +5,16 @@
 	<link rel="stylesheet" href="asset/common.css">
 </head>
 <body>
+
+    <textarea></textarea>
+
     <h2>Read Only</h2>
     <div class="grid-container js-grid-primary-container"></div>
+
     <h2>Editable</h2>
 	<div class="grid-container js-grid-secondary-container"></div>
+
+    <script src="node_modules/tinymce/tinymce.min.js"></script>
 	<script src="asset/common.js?<?php echo filemtime('asset/common.js') ?>"></script>
 </body>
 </html>

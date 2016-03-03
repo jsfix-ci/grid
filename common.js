@@ -1,7 +1,28 @@
 var $ = require('jquery');
+var tinymce = require('tinymce');
 var gridFactory = require('./grid');
 var gridPrimary = new gridFactory();
 var gridSecondary = new gridFactory();
+
+tinymce.init({
+  selector: 'textarea',
+  height: 500,
+  plugins: [
+    'advlist autolink lists link image charmap print preview anchor',
+    'searchreplace visualblocks code fullscreen',
+    'insertdatetime media table contextmenu paste code'
+  ],
+  toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+  content_css: [
+    '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
+    '//www.tinymce.com/css/codepen.min.css'
+  ]
+});
+
+// New event
+tinymce.editor.on('init', function(args) {
+    console.log('value');
+});
 
 gridPrimary.create({
   id: 'primary',
@@ -123,6 +144,13 @@ gridSecondary.create({
       type: 'text',
       key: 'sku',
       name: 'SKU'
+    },
+    {
+      search: true,
+      edit: true,
+      type: 'html',
+      key: 'html',
+      name: 'HTML'
     },
     {
       search: true,

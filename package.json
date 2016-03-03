@@ -14,15 +14,25 @@
     "url": "https://github.com/mwyatt/grid/issues"
   },
   "homepage": "https://github.com/mwyatt/grid#readme",
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "tinymce": "global:tinymce"
+  },
   "dependencies": {
     "jquery": "1.11.2",
     "mustache": "~2.2.1",
     "mwyatt-codex": "0.1.0",
-    "mwyatt-dialogue": "^0.2.0"
+    "mwyatt-dialogue": "^0.2.0",
+    "tinymce": "^4.3.7"
   },
   "devDependencies": {
     "autoprefixer": "6.0.3",
     "browserify": "11.2.0",
+    "browserify-shim": "^3.8.12",
     "es6-promise": "^3.0.2",
     "gulp": "3.9.0",
     "gulp-plumber": "^1.0.1",

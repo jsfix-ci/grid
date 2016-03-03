@@ -3,7 +3,7 @@
 $credentials = [
     'database.host' => '',
     'database.port' => '',
-    'database.basename' => 'inventory_1',
+    'database.basename' => 'phpunit_1',
     'database.username' => 'root',
     'database.password' => '123'
 ];
