@@ -4,6 +4,7 @@ var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = require('./templates');
 var dialogueFactory = require('mwyatt-dialogue');
 var dialogueCreate = new dialogueFactory();
+var dialogueCellWysi = new dialogueFactory();
 var dialogue = new dialogueFactory();
 var timeoutId;
 var feedbackQueueFactory = require('mwyatt-codex/feedbackQueue');
@@ -776,7 +777,33 @@ Grid.prototype.cellSelect = function(event, $cell) {
   };
 
   // replace html for input using data value
-  if (type == 'select') {
+  if (type == 'html') {
+    dialogueCellWysi.create({
+      width: 400,
+      html: mustache.render('<textarea class="js-grid-dialogue-wysi-textarea">{{html}}</textarea>', {html: $cell.data('value')}),
+      onComplete: function() {
+        tinymce.init({
+          selector: '.js-grid-dialogue-wysi-textarea',
+          height: 400,
+          plugins: [
+            'advlist autolink lists link image charmap print preview anchor',
+            'searchreplace visualblocks code fullscreen',
+            'insertdatetime media table contextmenu paste code'
+          ],
+          toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+          content_css: [
+            '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
+            '//www.tinymce.com/css/codepen.min.css'
+          ],
+          setup: function(editor) {
+            editor.on('init', function() {
+              console.log('initted');
+            });
+          }
+        });
+      }
+    })
+  } else if (type == 'select') {
     template = mustacheTemplates.select;
     data.options = model.selectOptionsKeyValue;
     data.classNames = ['grid-cell-input', event.data.inputClass];
@@ -788,8 +815,10 @@ Grid.prototype.cellSelect = function(event, $cell) {
     data = {type: 'text', value: $cell.data('value')};
   };
   
-  $cell.html(mustache.render(template, data));
-  $cell.find(gS(event.data.inputClass)).val($cell.data('value')).focus().select();
+  if (type != 'html') {
+    $cell.html(mustache.render(template, data));
+    $cell.find(gS(event.data.inputClass)).val($cell.data('value')).focus().select();
+  }
 };
 
 

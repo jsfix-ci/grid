@@ -6,8 +6,6 @@
 </head>
 <body>
 
-    <textarea></textarea>
-
     <h2>Read Only</h2>
     <div class="grid-container js-grid-primary-container"></div>
 
