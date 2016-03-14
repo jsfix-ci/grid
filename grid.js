@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var tinymce = require('tinymce');
 var mustache = require('mustache');
 var keyCode = {enter: 13, esc: 27};
 var mustacheTemplates = require('./templates');
@@ -608,6 +609,8 @@ Grid.prototype.cellDeselect = function(event, options) {
 
   var $selectedCell = $selectedRow.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
 
+  var newValue = event.data.getSelectedCellInputValue(event);
+
   $selectedCell.removeClass(event.data.selectedClass);
 
   if (!$selectedCell.length) {
@@ -622,7 +625,6 @@ Grid.prototype.cellDeselect = function(event, options) {
   };
 
   var $selectedCellInput = $selectedCell.find(gS(event.data.inputClass));
-  var newValue = $selectedCellInput.val();
   var cellHtml;
 
   if (options.revert) {
@@ -670,6 +672,17 @@ Grid.prototype.cellDeselect = function(event, options) {
 };
 
 
+Grid.prototype.getSelectedCellInputValue = function(event) {
+  var $selectedCellInput = event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass)).find(gS(event.data.inputClass));
+
+  if ($selectedCellInput.length) {
+    return $selectedCellInput.val();
+  } else if (typeof tinymce.activeEditor !== 'undefined') { // html
+    return tinymce.activeEditor.getContent();
+  }
+}
+
+
 // persist a rows
 Grid.prototype.update = function(event, data) {
   $.ajax({
@@ -680,6 +693,7 @@ Grid.prototype.update = function(event, data) {
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Updated row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'});
+        dialogueCellWysi.close();
       };
     },
     error: function(response) {
@@ -779,8 +793,16 @@ Grid.prototype.cellSelect = function(event, $cell) {
   // replace html for input using data value
   if (type == 'html') {
     dialogueCellWysi.create({
-      width: 400,
+      mask: true,
+      hardClose: true,
+      width: 500,
       html: mustache.render('<textarea class="js-grid-dialogue-wysi-textarea">{{html}}</textarea>', {html: $cell.data('value')}),
+      onClose: function() {
+        event.data.cellDeselect(event, {revert: true});
+        if (typeof tinymce.activeEditor !== 'undefined') {
+          tinymce.activeEditor.remove();
+        }
+      },
       onComplete: function() {
         tinymce.init({
           selector: '.js-grid-dialogue-wysi-textarea',
@@ -797,12 +819,17 @@ Grid.prototype.cellSelect = function(event, $cell) {
           ],
           setup: function(editor) {
             editor.on('init', function() {
-              console.log('initted');
+              dialogueCellWysi.applyCss({data: dialogueCellWysi});
             });
           }
         });
+      },
+      actions: {
+        Save: function() {
+          event.data.cellDeselect(event, {persist: true});
+        }
       }
-    })
+    });
   } else if (type == 'select') {
     template = mustacheTemplates.select;
     data.options = model.selectOptionsKeyValue;
