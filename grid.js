@@ -10,6 +10,25 @@ var dialogue = new dialogueFactory();
 var timeoutId;
 var feedbackQueueFactory = require('mwyatt-codex/feedbackQueue');
 var feedbackQueue = new feedbackQueueFactory();
+var tinymceConfig = {
+  selector: '.js-grid-dialogue-wysi-textarea',
+  height: 400,
+  plugins: [
+    'advlist autolink lists link image charmap print preview anchor',
+    'searchreplace visualblocks code fullscreen',
+    'insertdatetime media table contextmenu paste code'
+  ],
+  toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+  content_css: [
+    '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
+    '//www.tinymce.com/css/codepen.min.css'
+  ],
+  setup: function(editor) {
+    editor.on('init', function() {
+      dialogueCellWysi.applyCss({data: dialogueCellWysi});
+    });
+  }
+};
 
 
 // obtains css selector version of a class name
@@ -46,6 +65,7 @@ var Grid = function () {
   this.buttonRemoveFiltersClass = 'js-grid-button-remove-filters';
   this.spinnerClass = 'js-grid-spinner';
   this.buttonDeleteClass = 'js-grid-row-button-delete';
+  this.rowsCurrent = []; // collection of rows read in currently
 
   if (typeof localStorage === 'undefined') {
     console.warn('localStorage is not defined');
@@ -169,11 +189,7 @@ Grid.prototype.read = function(event, data) {
       event.data.readRender(event, response.rows);
       event.data.renderPagination(event, response);
       event.data.storeReadModel(event, data);
-
-      // get back
-      // current page #
-      // total possible pages
-      // rows
+      event.data.rowsCurrent = response.rows;
     },
     error: function(response) {
       return console.warn('problem with read request');
@@ -347,7 +363,7 @@ Grid.prototype.setEvents = function(event) {
   event.data.$container.on('keyup.grid-' + event.data.options.id, event.data, function(event) {
 
     // enter key and a cell is being edited
-    if (keyCode.enter == event.which && event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass))) {
+    if (keyCode.enter == event.which && event.data.getSelectedCell(event)) {
       event.data.cellDeselect(event, {persist: true});
     } else if (keyCode.esc == event.which) {
       event.data.cellDeselect(event, {revert: true});
@@ -576,48 +592,55 @@ Grid.prototype.getModelByKey = function(event, key) {
 };
 
 
-// deselect with classes
+// deselect row by removing classes
 Grid.prototype.rowDeselect = function(event) {
-  var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
+  var $selectedRow = event.data.getSelectedRow(event);
 
   if (!$selectedRow.length) {
     return;
   };
 
-  $selectedRow.removeClass(event.data.selectedClass);  
+  $selectedRow.removeClass(event.data.selectedClass);
 };
 
 
-// deselect cell and persist
+Grid.prototype.getSelectedRow = function(event) {
+  return event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
+}
+
+
+Grid.prototype.getSelectedCell = function(event) {
+  return event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
+}
+
+
+// deselect cell with options relating to persistence
 Grid.prototype.cellDeselect = function(event, options) {
+  var $selectedRow = event.data.getSelectedRow(event);
+  var wasChanged;
   var defaults = {
     persist: false,
     revert: false
   };
   options = $.extend(defaults, typeof options === 'undefined' ? {} : options);
 
-  var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
-  var wasChanged;
-
   if (!$selectedRow.length) {
     return;
   };
 
   var primaryKeyValue = event.data.getSelectedRowPrimaryValue(event);
-
-  event.data.rowDeselect(event);
-
-  var $selectedCell = $selectedRow.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
-
-  var newValue = event.data.getSelectedCellInputValue(event);
-
-  $selectedCell.removeClass(event.data.selectedClass);
+  var $selectedCell = event.data.getSelectedCell(event);
 
   if (!$selectedCell.length) {
     return;
   };
 
+  var newValue = event.data.getSelectedCellInputValue(event);
   var model = event.data.getModelByIndex(event, $selectedCell.index());
+
+  // deselect visibly
+  event.data.rowDeselect(event);
+  $selectedCell.removeClass(event.data.selectedClass);
 
   // not editable
   if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
@@ -626,11 +649,12 @@ Grid.prototype.cellDeselect = function(event, options) {
 
   var $selectedCellInput = $selectedCell.find(gS(event.data.inputClass));
   var cellHtml;
+  var persistedValue = event.data.getRowCellValue(event, $selectedCell);
 
   if (options.revert) {
-    cellHtml = $selectedCell.data('value');
+    cellHtml = persistedValue;
   } else {
-    if (newValue == $selectedCell.data('value')) {
+    if (newValue == persistedValue) {
       wasChanged = false;
     } else {
       wasChanged = true;
@@ -652,9 +676,6 @@ Grid.prototype.cellDeselect = function(event, options) {
     } else {
       cellHtml = newValue;
     };
-
-    // store inside data
-    $selectedCell.data('value', newValue);
   };
 
   $selectedCell.html(cellHtml);
@@ -673,7 +694,7 @@ Grid.prototype.cellDeselect = function(event, options) {
 
 
 Grid.prototype.getSelectedCellInputValue = function(event) {
-  var $selectedCellInput = event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass)).find(gS(event.data.inputClass));
+  var $selectedCellInput = event.data.getSelectedCell(event).find(gS(event.data.inputClass));
 
   if ($selectedCellInput.length) {
     return $selectedCellInput.val();
@@ -683,7 +704,7 @@ Grid.prototype.getSelectedCellInputValue = function(event) {
 }
 
 
-// persist a rows
+// persist a row cell
 Grid.prototype.update = function(event, data) {
   $.ajax({
     type: 'get',
@@ -693,6 +714,7 @@ Grid.prototype.update = function(event, data) {
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Updated row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'});
+        event.data.buildReadModel(event);
         dialogueCellWysi.close();
       };
     },
@@ -734,11 +756,12 @@ Grid.prototype.createRow = function(event) {
 
 // returns the selected row primary value
 Grid.prototype.getSelectedRowPrimaryValue = function(event) {
-  var $selectedRow = event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
-  var $selectedCell = $selectedRow.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
+  var $selectedRow = event.data.getSelectedRow(event);
+  var $selectedCell = event.data.getSelectedCell(event);
   var $primaryHeadingCell = event.data.$container.find(gS(event.data.cellHeadingClass) + '[data-key="' + event.data.primaryKey + '"]');
   var $primaryCell = $selectedRow.find(gS(event.data.cellClass)).eq($primaryHeadingCell.index());
-  return $primaryCell.data('value');
+
+  return event.data.getRowCellValue(event, $primaryCell);
 };
 
 
@@ -776,11 +799,11 @@ Grid.prototype.cellSelect = function(event, $cell) {
 
   event.data.selectRowByCell(event, $cell);
 
-  var $row = $cell.closest(gS(event.data.rowClass));
-
   var model = event.data.getModelByIndex(event, $cell.index());
 
   var type = event.data.getInputTypeFromModel(model);
+
+  var persistedValue = event.data.getRowCellValue(event, $cell);
 
   // optional select td call
   event.data.options.onSelectCell.call(this, model, type);
@@ -796,7 +819,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
       mask: true,
       hardClose: true,
       width: 500,
-      html: mustache.render('<textarea class="js-grid-dialogue-wysi-textarea">{{html}}</textarea>', {html: $cell.data('value')}),
+      html: mustache.render('<textarea class="js-grid-dialogue-wysi-textarea">{{html}}</textarea>', {html: persistedValue}),
       onClose: function() {
         event.data.cellDeselect(event, {revert: true});
         if (typeof tinymce.activeEditor !== 'undefined') {
@@ -804,25 +827,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
         }
       },
       onComplete: function() {
-        tinymce.init({
-          selector: '.js-grid-dialogue-wysi-textarea',
-          height: 400,
-          plugins: [
-            'advlist autolink lists link image charmap print preview anchor',
-            'searchreplace visualblocks code fullscreen',
-            'insertdatetime media table contextmenu paste code'
-          ],
-          toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
-          content_css: [
-            '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
-            '//www.tinymce.com/css/codepen.min.css'
-          ],
-          setup: function(editor) {
-            editor.on('init', function() {
-              dialogueCellWysi.applyCss({data: dialogueCellWysi});
-            });
-          }
-        });
+        tinymce.init(tinymceConfig);
       },
       actions: {
         Save: function() {
@@ -835,18 +840,25 @@ Grid.prototype.cellSelect = function(event, $cell) {
     data.options = model.selectOptionsKeyValue;
     data.classNames = ['grid-cell-input', event.data.inputClass];
     for (var index = data.options.length - 1; index >= 0; index--) {
-      data.options[index].keySelected = $cell.data('value') == data.options[index].key;
+      data.options[index].keySelected = persistedValue == data.options[index].key;
     };
   } else {
     template = mustacheTemplates.input;
-    data = {type: 'text', value: $cell.data('value')};
+    data = {type: 'text', value: persistedValue};
   };
   
   if (type != 'html') {
     $cell.html(mustache.render(template, data));
-    $cell.find(gS(event.data.inputClass)).val($cell.data('value')).focus().select();
+    $cell.find(gS(event.data.inputClass)).val(persistedValue).focus().select();
   }
 };
+
+
+Grid.prototype.getRowCellValue = function(event, $cell) {
+  var rowPos = $cell.parent(gS(event.data.rowClass)).index();
+  var cellPos = $cell.index();
+  return event.data.rowsCurrent[rowPos - 1][cellPos]['value'];
+}
 
 
 Grid.prototype.getStorageKey = function(event) {

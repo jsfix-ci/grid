@@ -13,7 +13,7 @@ templates.rows = [
 
     '{{#.}}',
 
-    '<td class="grid-cell-base grid-cell grid-td js-grid-cell" data-value="{{value}}">{{{html}}}</td>',
+    '<td class="grid-cell-base grid-cell grid-td js-grid-cell">{{{html}}}</td>',
 
     '{{/.}}',
 
