@@ -1,7 +1,7 @@
 {
   "name": "mwyatt-grid",
   "author": "Martin Wyatt <martin.wyatt@gmail.com>",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Manage database tables quickly and easily.",
   "main": "grid.js",
   "scripts": {},
