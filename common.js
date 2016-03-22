@@ -111,6 +111,7 @@ gridSecondary.create({
     update: 'request/grid-secondary/update.php',
     delete: 'request/grid-secondary/delete.php'
   },
+  deleteExceptions: {key: 'id', values: [1, 10]},
   cols: [
     {
       key: 'id',
