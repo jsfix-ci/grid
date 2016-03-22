@@ -134,7 +134,8 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
       model.selectOptionsKeyValue = [];
       for (var key in model.selectOptions) {
         var value = model.selectOptions[key];
-        var selected = 'search' in storedModel && model.key in storedModel.search && storedModel.search[model.key] == value;
+        var storedModelValue = model.selectOptions[storedModel.search[model.key]];
+        var selected = 'search' in storedModel && model.key in storedModel.search && storedModelValue == value;
         model.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
@@ -242,6 +243,9 @@ Grid.prototype.getPageCurrent = function(event) {
 
 Grid.prototype.readRender = function(event, rows) {
 
+  // find out if any html models exist
+  // replace the data with a blank space, or class
+
   // transform row values
   // select boxes appear are represented as the value
   // if the cell has a 'readTemplate' then it needs to be passed through that
@@ -262,6 +266,10 @@ Grid.prototype.readRender = function(event, rows) {
           rows[indexRow][indexCell].html = model.selectOptions[value];
         };
       };
+
+      if ('type' in model && model.type == 'html') {
+        rows[indexRow][indexCell].html = 'html';
+      }
 
       // mst template
       if ('readTemplate' in model) {
@@ -651,34 +659,34 @@ Grid.prototype.cellDeselect = function(event, options) {
   var cellHtml;
   var persistedValue = event.data.getRowCellValue(event, $selectedCell);
 
-  if (options.revert) {
-    cellHtml = persistedValue;
+  if (newValue == persistedValue) {
+    wasChanged = false;
   } else {
-    if (newValue == persistedValue) {
-      wasChanged = false;
-    } else {
-      wasChanged = true;
-    };
-
-    // get selected option html
-    var type = event.data.getInputTypeFromModel(model);
-
-    // select needs to get the display name from the key
-    if (type == 'select') {
-      for (var key in model.selectOptions) {
-        if (key == newValue) {
-          cellHtml = model.selectOptions[key];
-        };
-      };
-
-    // store the new value in data
-    // put in html the display name of it
-    } else {
-      cellHtml = newValue;
-    };
+    wasChanged = true;
   };
 
-  $selectedCell.html(cellHtml);
+  // get selected option html
+  var type = event.data.getInputTypeFromModel(model);
+
+  // select needs to get the display name from the key
+  if (type == 'select') {
+    for (var key in model.selectOptions) {
+      if (key == newValue) {
+        cellHtml = model.selectOptions[key];
+      };
+    };
+
+  // store the new value in data
+  // put in html the display name of it
+  } else if (options.revert) {
+    cellHtml = persistedValue;
+  } else {
+    cellHtml = newValue;
+  };
+
+  if (model.type != 'html') {
+    $selectedCell.html(cellHtml);
+  }
 
   if (options.persist && wasChanged) {
 
@@ -698,7 +706,7 @@ Grid.prototype.getSelectedCellInputValue = function(event) {
 
   if ($selectedCellInput.length) {
     return $selectedCellInput.val();
-  } else if (typeof tinymce.activeEditor !== 'undefined') { // html
+  } else if (typeof tinymce.activeEditor !== 'undefined' && tinymce.activeEditor) { // html
     return tinymce.activeEditor.getContent();
   }
 }

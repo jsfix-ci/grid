@@ -138,6 +138,17 @@ gridSecondary.create({
       key: 'barcode',
       name: 'Barcode',
       edit: true
+    },
+    {
+      edit: true,
+      width: 6,
+      key: 'supplier',
+      name: 'Supplier',
+      search: true,
+      selectOptions: {
+        9: 'China',
+        17: 'Burnley'
+      }
     }
   ]
 });
