@@ -134,8 +134,17 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
       model.selectOptionsKeyValue = [];
       for (var key in model.selectOptions) {
         var value = model.selectOptions[key];
-        var storedModelValue = model.selectOptions[storedModel.search[model.key]];
-        var selected = 'search' in storedModel && model.key in storedModel.search && storedModelValue == value;
+        var storedModelValue;
+        var selected;
+
+        if (typeof storedModel != 'undefined') {
+          if (typeof storedModel.search != 'undefined') {
+            storedModelValue = model.selectOptions[storedModel.search[model.key]];
+          }
+
+          selected = 'search' in storedModel && model.key in storedModel.search && storedModelValue == value;
+        }
+        
         model.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
