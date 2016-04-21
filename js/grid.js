@@ -8,7 +8,7 @@ var dialogueCreate = new dialogueFactory();
 var dialogueCellWysi = new dialogueFactory();
 var dialogue = new dialogueFactory();
 var timeoutId;
-var feedbackQueueFactory = require('mwyatt-codex/feedbackQueue');
+var feedbackQueueFactory = require('mwyatt-feedback-queue');
 var feedbackQueue = new feedbackQueueFactory();
 var tinymceConfig = {
   selector: '.js-grid-dialogue-wysi-textarea',
@@ -30,25 +30,21 @@ var tinymceConfig = {
   }
 };
 
-
 // obtains css selector version of a class name
-function gS (className) {
+function gS(className) {
   return '.' + className;
 }
 
-
 // obtain event namespaced
-function gEvtNs (eventName) {
+function gEvtNs(eventName) {
   return eventName + '.grid';
 }
 
-
-function getContainerSelector (id) {
+function getContainerSelector(id) {
   return 'js-grid-' + id + '-container';
 }
 
-
-var Grid = function () {
+var Grid = function() {
   this.selectedClass = 'is-selected';
   this.cellHeadingClass = 'js-grid-cell-heading';
   this.tableClass = 'js-grid-table';
@@ -74,7 +70,6 @@ var Grid = function () {
     console.warn('JSON is not defined');
   };
 };
-
 
 Grid.prototype.create = function(options) {
   var defaults = {
@@ -102,15 +97,13 @@ Grid.prototype.create = function(options) {
   this.read({data: this}, this.getFirstReadModel({data: this}));
 };
 
-
 Grid.prototype.getRowsPerPage = function(event) {
   var storedModel = event.data.getStoredReadModel(event);
   if ('rowsPerPage' in storedModel) {
-     return storedModel.rowsPerPage;
+    return storedModel.rowsPerPage;
   };
   return event.data.options.perPageOptions[0];
 };
-
 
 Grid.prototype.getFirstReadModel = function(event) {
   var storedModel = event.data.getStoredReadModel(event);
@@ -120,7 +113,6 @@ Grid.prototype.getFirstReadModel = function(event) {
   };
   return event.data.getReadModelDataDefaults(event);
 };
-
 
 // this structure is needed so that you can loop as an array
 // factors in stored model to render selected items correctly
@@ -144,7 +136,7 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
 
           selected = 'search' in storedModel && model.key in storedModel.search && storedModelValue == value;
         }
-        
+
         model.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
@@ -161,7 +153,6 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
     this.options.cols[index] = model;
   };
 };
-
 
 Grid.prototype.read = function(event, data) {
 
@@ -189,9 +180,9 @@ Grid.prototype.read = function(event, data) {
     },
     success: function(response) {
       if (
-        typeof response === 'undefined'
-        || typeof response.rowsTotal === 'undefined'
-        || typeof response.rows === 'undefined'
+        typeof response === 'undefined' ||
+        typeof response.rowsTotal === 'undefined' ||
+        typeof response.rows === 'undefined'
       ) {
         return console.warn('read response malformed', response);
       };
@@ -206,7 +197,6 @@ Grid.prototype.read = function(event, data) {
     }
   });
 };
-
 
 Grid.prototype.renderPagination = function(event, response) {
 
@@ -243,12 +233,10 @@ Grid.prototype.renderPagination = function(event, response) {
     }, {select: mustacheTemplates.select}));
 };
 
-
 Grid.prototype.getPageCurrent = function(event) {
   var pageCurrent = parseInt(event.data.$container.find(gS(event.data.pageSelectClass)).val());
   return pageCurrent > 0 ? pageCurrent : 1;
 };
-
 
 Grid.prototype.readRender = function(event, rows) {
 
@@ -260,7 +248,7 @@ Grid.prototype.readRender = function(event, rows) {
   // if the cell has a 'readTemplate' then it needs to be passed through that
   for (var indexRow = rows.length - 1; indexRow >= 0; indexRow--) {
 
-    // step through each model and compare the row value with the same index and switch it out 
+    // step through each model and compare the row value with the same index and switch it out
     for (var indexCell = 0; indexCell <= rows[indexRow].length - 1; indexCell++) {
       var value = rows[indexRow][indexCell];
 
@@ -288,7 +276,7 @@ Grid.prototype.readRender = function(event, rows) {
   };
 
   event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
-  
+
   if (rows.length) {
 
     // attach delete button
@@ -306,7 +294,6 @@ Grid.prototype.readRender = function(event, rows) {
   };
 };
 
-
 Grid.prototype.storeInitialData = function() {
 
   // extract primary key and store
@@ -316,7 +303,6 @@ Grid.prototype.storeInitialData = function() {
     };
   };
 };
-
 
 Grid.prototype.deleteRow = function(event) {
   var data = {};
@@ -358,7 +344,6 @@ Grid.prototype.deleteRow = function(event) {
   });
 };
 
-
 Grid.prototype.setEvents = function(event) {
 
   // selecting a cell
@@ -394,7 +379,7 @@ Grid.prototype.setEvents = function(event) {
   });
 
   // search field clicking dont order heading
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchFieldClass), event.data, function (event) {
+  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchFieldClass), event.data, function(event) {
     event.stopPropagation();
   });
 
@@ -437,9 +422,8 @@ Grid.prototype.setEvents = function(event) {
         }
       }
     });
-  })
+  });
 };
-
 
 Grid.prototype.getCreateFormHtml = function(event) {
   var models = event.data.options.cols;
@@ -460,10 +444,9 @@ Grid.prototype.getCreateFormHtml = function(event) {
   return mustache.render(mustacheTemplates.formCreate, data.reverse());
 };
 
-
 Grid.prototype.mouseHeadingCell = function(event) {
   var $cell = $(this);
-  var dataKey = 'order'
+  var dataKey = 'order';
   var order = $cell.data(dataKey);
   var orderNew;
 
@@ -487,14 +470,12 @@ Grid.prototype.mouseHeadingCell = function(event) {
   event.data.buildReadModel(event);
 };
 
-
 Grid.prototype.keySearchInput = function(event) {
   var $searchInput = $(this);
   if (event.which == keyCode.enter) {
     event.data.buildReadModel(event);
   };
 };
-
 
 Grid.prototype.getReadModelDataDefaults = function(event) {
   return {
@@ -504,7 +485,6 @@ Grid.prototype.getReadModelDataDefaults = function(event) {
     pageCurrent: 1
   };
 };
-
 
 // build a model which can be interpreted by the read method in php
 // searches
@@ -554,7 +534,6 @@ Grid.prototype.buildReadModel = function(event) {
   event.data.read(event, data);
 };
 
-
 // flag container as being filtered
 Grid.prototype.markContainerFiltering = function(event, readModel) {
   event.data.$container.removeClass('grid-is-filtering');
@@ -563,7 +542,6 @@ Grid.prototype.markContainerFiltering = function(event, readModel) {
   };
 };
 
-
 Grid.prototype.mouseDocument = function(event) {
   var $target = $(event.target);
 
@@ -571,7 +549,7 @@ Grid.prototype.mouseDocument = function(event) {
   if (!$target.length) {
     return event.data.cellDeselect(event);
   };
-  
+
   // is cell and selected
   if ($target.hasClass(event.data.cellClass) && $target.hasClass(event.data.selectedClass)) {
     return;
@@ -585,7 +563,6 @@ Grid.prototype.mouseDocument = function(event) {
   };
 };
 
-
 Grid.prototype.getModelByIndex = function(event, index) {
   var thKey = event.data.$container.find(gS(event.data.cellHeadingClass)).eq(index).data('key');
   var model;
@@ -597,7 +574,6 @@ Grid.prototype.getModelByIndex = function(event, index) {
   };
 };
 
-
 Grid.prototype.getModelByKey = function(event, key) {
   var model;
   for (var index = event.data.options.cols.length - 1; index >= 0; index--) {
@@ -607,7 +583,6 @@ Grid.prototype.getModelByKey = function(event, key) {
     };
   };
 };
-
 
 // deselect row by removing classes
 Grid.prototype.rowDeselect = function(event) {
@@ -620,16 +595,13 @@ Grid.prototype.rowDeselect = function(event) {
   $selectedRow.removeClass(event.data.selectedClass);
 };
 
-
 Grid.prototype.getSelectedRow = function(event) {
   return event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
-}
-
+};
 
 Grid.prototype.getSelectedCell = function(event) {
   return event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
-}
-
+};
 
 // deselect cell with options relating to persistence
 Grid.prototype.cellDeselect = function(event, options) {
@@ -709,7 +681,6 @@ Grid.prototype.cellDeselect = function(event, options) {
   };
 };
 
-
 Grid.prototype.getSelectedCellInputValue = function(event) {
   var $selectedCellInput = event.data.getSelectedCell(event).find(gS(event.data.inputClass));
 
@@ -718,8 +689,7 @@ Grid.prototype.getSelectedCellInputValue = function(event) {
   } else if (typeof tinymce.activeEditor !== 'undefined' && tinymce.activeEditor) { // html
     return tinymce.activeEditor.getContent();
   }
-}
-
+};
 
 // persist a row cell
 Grid.prototype.update = function(event, data) {
@@ -740,7 +710,6 @@ Grid.prototype.update = function(event, data) {
     }
   });
 };
-
 
 Grid.prototype.createRow = function(event) {
   var data = {columns: {}};
@@ -770,7 +739,6 @@ Grid.prototype.createRow = function(event) {
   });
 };
 
-
 // returns the selected row primary value
 Grid.prototype.getSelectedRowPrimaryValue = function(event) {
   var $selectedRow = event.data.getSelectedRow(event);
@@ -780,7 +748,6 @@ Grid.prototype.getSelectedRowPrimaryValue = function(event) {
 
   return event.data.getRowCellValue(event, $primaryCell);
 };
-
 
 // using model get the input type
 Grid.prototype.getInputTypeFromModel = function(model) {
@@ -792,7 +759,6 @@ Grid.prototype.getInputTypeFromModel = function(model) {
     return '';
   };
 };
-
 
 Grid.prototype.selectRowByCell = function(event, $cell) {
 
@@ -806,7 +772,6 @@ Grid.prototype.selectRowByCell = function(event, $cell) {
     .closest(gS(event.data.rowClass))
     .addClass(event.data.selectedClass);
 };
-
 
 // switch the data out with an input / select
 Grid.prototype.cellSelect = function(event, $cell) {
@@ -863,37 +828,32 @@ Grid.prototype.cellSelect = function(event, $cell) {
     template = mustacheTemplates.input;
     data = {type: 'text', value: persistedValue};
   };
-  
+
   if (type != 'html') {
     $cell.html(mustache.render(template, data));
     $cell.find(gS(event.data.inputClass)).val(persistedValue).focus().select();
   }
 };
 
-
 Grid.prototype.getRowCellValue = function(event, $cell) {
   var rowPos = $cell.parent(gS(event.data.rowClass)).index();
   var cellPos = $cell.index();
   return event.data.rowsCurrent[rowPos - 1][cellPos]['value'];
-}
-
+};
 
 Grid.prototype.getStorageKey = function(event) {
   return 'mwyatt-grid-' + event.data.options.id;
-}
-
+};
 
 // return the last performed read model
 // defaults to empty object
 Grid.prototype.getStoredReadModel = function(event) {
   var readModel = JSON.parse(localStorage.getItem(event.data.getStorageKey(event)));
   return readModel ? readModel : {};
-}
-
+};
 
 Grid.prototype.storeReadModel = function(event, model) {
   localStorage.setItem(event.data.getStorageKey(event), JSON.stringify(model));
-}
-
+};
 
 module.exports = Grid;
