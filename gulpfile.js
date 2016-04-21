@@ -57,6 +57,7 @@ gulp.task('copy', copy);
 
 function build() {
   runSequence(
+    'jsLib',
     'js',
     'css',
     'jsMin',
