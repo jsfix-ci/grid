@@ -25,7 +25,6 @@ if (isset($_GET['order']) && is_array($_GET['order'])) {
 }
 
 $sth = $connection->query(implode(' ', $sql));
-
 $rows = $sth->fetchAll();
 $rowsTotal = count($rows);
 

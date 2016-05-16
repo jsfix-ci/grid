@@ -1,10 +1,14 @@
+:root {
+  --cell-spacing: 3px;
+}
+
 .grid-table {
   width: 100%;
 }
 
 .grid-cell-base {
   position: relative;
-  padding: 5px;
+  padding: var(--cell-spacing);
   border: 1px solid #cccccc;
   font-size: 12px;
 }
@@ -24,9 +28,6 @@
   white-space: nowrap;
 }
 
-.grid-search-input {
-  width: 100%;
-}
 
 .grid-cell-input {
   display: block;
@@ -35,6 +36,10 @@
 
 .grid-cell-heading {
   background-color: #eeeeee;
+  /*position: relative;*/
+  padding: var(--cell-spacing) 0 0;
+  border: 1px solid #cccccc;
+  font-size: 12px;
 }
 
 .is-order-asc {
@@ -64,7 +69,7 @@ body {
 
 .grid-form-create-label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: var(--cell-spacing);
 }
 
 .grid-form-create-input {
@@ -73,14 +78,6 @@ body {
 
 .grid-form-create-select {
   width: 100%;
-}
-
-.grid-search-input {
-  padding: 0 2px;
-}
-
-.grid-cell-heading-name {
-  font-weight: 600;
 }
 
 .grid-pagination-container {
@@ -103,8 +100,8 @@ body {
   float: right;
   font-size: 12px;
   background: red;
-  padding: 3px 5px;
-  margin-bottom: 5px;
+  padding: 3px var(--cell-spacing);
+  margin-bottom: var(--cell-spacing);
   color: #ffffff;
   cursor: pointer;
 }
@@ -169,7 +166,7 @@ body {
 .grid-cell-heading-name:before {
   display: none;
   width: 10px;
-  border-width: 5px;
+  border-width: var(--cell-spacing);
   border-style: solid;
   border-left-color: transparent;
   border-right-color: transparent;
@@ -204,4 +201,34 @@ body {
 
 .grid-row-button-delete:hover {
   opacity: 1;
+}
+
+.grid-search-input {
+  width: 100%;
+  font-size: 1em;
+  box-sizing: border-box;
+  appearance: none;
+  color: var(--body-color);
+  font-family: var(--font-family);
+  border: none;
+  padding: 2px 4px;
+  margin: 0;
+  border-radius: var(--border-radius);
+}
+
+.grid-cell-heading-name {
+    margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.grid-search-select {
+  font-size: 1em;
+  box-sizing: border-box;
+  color: var(--body-color);
+  font-family: var(--font-family);
+  border: none;
+  padding: 1px 0;
+  margin: 0;
+  width: 100%;
+  border-radius: var(--border-radius);
 }

@@ -13,11 +13,14 @@ gridPrimary.create({
     // update: 'request/grid-primary/update.php',
     // delete: 'request/grid-primary/delete.php'
   },
-  onSelectCell: function(model, type) {
-    console.log('onSelectCell', this, model, type);
+  onSelectCell: function(config) {
+    // if (model.key == 'id') {
+    //   console.log('id selected');
+    // }
+    // console.log('onSelectCell', this, model, type);
   },
-  onSelectRow: function() {
-    console.log('onSelectRow', this);
+  onSelectRow: function(config) {
+    // gridSecondary.doSomething
   },
   cols: [
     {
@@ -28,7 +31,7 @@ gridPrimary.create({
       search: true,
       order: true,
       edit: false,
-      readTemplate: '<a href="#" class="link-primary">{{.}}</a>'
+      readTemplate: '<a href="#" class="link">{{.}}</a>'
     },
     {
       width: 6,

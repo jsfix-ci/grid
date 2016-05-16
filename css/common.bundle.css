@@ -2,6 +2,7 @@
 @import 'settings';
 @import 'mwyatt-codex';
 @import 'mwyatt-codex/css/form';
+@import 'mwyatt-codex/css/link';
 @import 'mwyatt-feedback-queue';
 @import 'mwyatt-dialogue';
 @import 'grid';

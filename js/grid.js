@@ -1,15 +1,14 @@
 var $ = require('jquery');
 var tinymce = require('tinymce');
 var mustache = require('mustache');
-var keyCode = {enter: 13, esc: 27};
+var utils = require('./utilities');
 var mustacheTemplates = require('./templates');
 var dialogueFactory = require('mwyatt-dialogue');
-var dialogueCreate = new dialogueFactory();
-var dialogueCellWysi = new dialogueFactory();
-var dialogue = new dialogueFactory();
-var timeoutId;
 var feedbackQueueFactory = require('mwyatt-feedback-queue');
-var feedbackQueue = new feedbackQueueFactory();
+var classes = require('./classes');
+
+var keyCode = {enter: 13, esc: 27};
+var timeoutId;
 var tinymceConfig = {
   selector: '.js-grid-dialogue-wysi-textarea',
   height: 400,
@@ -29,38 +28,12 @@ var tinymceConfig = {
     });
   }
 };
-
-// obtains css selector version of a class name
-function gS(className) {
-  return '.' + className;
-}
-
-// obtain event namespaced
-function gEvtNs(eventName) {
-  return eventName + '.grid';
-}
-
-function getContainerSelector(id) {
-  return 'js-grid-' + id + '-container';
-}
+var dialogueCreate = new dialogueFactory();
+var dialogueCellWysi = new dialogueFactory();
+var dialogue = new dialogueFactory();
+var feedbackQueue = new feedbackQueueFactory();
 
 var Grid = function() {
-  this.selectedClass = 'is-selected';
-  this.cellHeadingClass = 'js-grid-cell-heading';
-  this.tableClass = 'js-grid-table';
-  this.rowClass = 'js-grid-row';
-  this.rowHeadingClass = 'js-grid-row-heading';
-  this.cellClass = 'js-grid-cell';
-  this.inputClass = 'js-grid-cell-input';
-  this.searchFieldClass = 'js-grid-search-field';
-  this.searchInputClass = 'js-grid-search-input';
-  this.searchSelectClass = 'js-grid-search-select';
-  this.pageSelectClass = 'js-grid-pagination-select';
-  this.perPageSelectClass = 'js-grid-cell-input-perpage';
-  this.pageContainerClass = 'js-grid-pagination-container';
-  this.buttonRemoveFiltersClass = 'js-grid-button-remove-filters';
-  this.spinnerClass = 'js-grid-spinner';
-  this.buttonDeleteClass = 'js-grid-row-button-delete';
   this.rowsCurrent = []; // collection of rows read in currently
 
   if (typeof localStorage === 'undefined') {
@@ -82,7 +55,7 @@ Grid.prototype.create = function(options) {
 
   this.rowsPerPage = this.getRowsPerPage({data: this});
 
-  var containerSelector = gS(getContainerSelector(this.options.id));
+  var containerSelector = utils.gS(utils.getContainerSelector(this.options.id));
   this.$container = $(containerSelector);
   if (!this.$container.length) {
     console.warn('container not found in the dom', containerSelector);
@@ -157,16 +130,16 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
 Grid.prototype.read = function(event, data) {
 
   // clear out no results pane
-  event.data.$container.find(gS('js-grid-no-rows')).remove();
+  event.data.$container.find(utils.gS('js-grid-no-rows')).remove();
 
   // clear out old rows
   event.data.$container
-    .find(gS(event.data.rowClass))
+    .find(utils.gS(classes.row))
     .remove();
 
   // spin time
   event.data.$container
-    .find(gS(event.data.tableClass))
+    .find(utils.gS(classes.table))
     .after(mustache.render(mustacheTemplates.spinner));
 
   // get new fun rows
@@ -176,7 +149,7 @@ Grid.prototype.read = function(event, data) {
     dataType: 'json',
     data: data,
     complete: function() {
-      event.data.$container.find(gS(event.data.spinnerClass)).remove();
+      event.data.$container.find(utils.gS(classes.spinner)).remove();
     },
     success: function(response) {
       if (
@@ -225,16 +198,16 @@ Grid.prototype.renderPagination = function(event, response) {
   };
 
   // render pagination
-  event.data.$container.find(gS(event.data.pageContainerClass)).html(mustache.render(mustacheTemplates.pagination, {
+  event.data.$container.find(utils.gS(classes.pageContainer)).html(mustache.render(mustacheTemplates.pagination, {
       possiblePages: possiblePages,
-      selectPages: {options: options, classNames: ['grid-pagination-select', event.data.pageSelectClass]},
-      selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', event.data.perPageSelectClass]},
+      selectPages: {options: options, classNames: ['grid-pagination-select', classes.pageSelect]},
+      selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', classes.perPageSelect]},
       rowsTotal: rowsTotal
     }, {select: mustacheTemplates.select}));
 };
 
 Grid.prototype.getPageCurrent = function(event) {
-  var pageCurrent = parseInt(event.data.$container.find(gS(event.data.pageSelectClass)).val());
+  var pageCurrent = parseInt(event.data.$container.find(utils.gS(classes.pageSelect)).val());
   return pageCurrent > 0 ? pageCurrent : 1;
 };
 
@@ -275,21 +248,21 @@ Grid.prototype.readRender = function(event, rows) {
     };
   };
 
-  event.data.$container.find(gS(event.data.rowHeadingClass)).after(mustache.render(mustacheTemplates.rows, rows));
+  event.data.$container.find(utils.gS(classes.rowHeading)).after(mustache.render(mustacheTemplates.rows, rows));
 
   if (rows.length) {
 
     // attach delete button
     if ('delete' in event.data.options.url) {
-      var $rows = event.data.$container.find(gS(event.data.rowClass));
+      var $rows = event.data.$container.find(utils.gS(classes.row));
       for (var index = $rows.length - 1; index >= 0; index--) {
         var $row = $($rows[index]);
-        $row.find(gS(event.data.cellClass)).last().append(mustache.render(mustacheTemplates.deleteButton));
+        $row.find(utils.gS(classes.cell)).last().append(mustache.render(mustacheTemplates.deleteButton));
       };
     };
   } else {
     event.data.$container
-      .find(gS(event.data.tableClass))
+      .find(utils.gS(classes.table))
       .after(mustache.render(mustache.render(mustacheTemplates.noRowsPane)));
   };
 };
@@ -307,7 +280,7 @@ Grid.prototype.storeInitialData = function() {
 Grid.prototype.deleteRow = function(event) {
   var data = {};
   var $trigger = $(this);
-  event.data.selectRowByCell(event, $trigger.closest(gS(event.data.cellClass)));
+  event.data.selectRowByCell(event, $trigger.closest(utils.gS(classes.cell)));
   data[event.data.primaryKey] = event.data.getSelectedRowPrimaryValue(event);
 
   dialogue.create({
@@ -346,23 +319,20 @@ Grid.prototype.deleteRow = function(event) {
 
 Grid.prototype.setEvents = function(event) {
 
-  // selecting a cell
-  // this.$container.on(gEvtNs('mouseup'), gS(this.cellClass), this, this.cellSelect);
-
   // clicking the document
   // could be a cell or row!
-  event.data.$container.on('mouseup.grid-' + event.data.options.id, event.data, event.data.mouseDocument);
+  event.data.$container.on(utils.gEvtNs('mouseup'), event.data, event.data.mouseDocument);
 
-  event.data.$container.on('click.grid-' + event.data.options.id, gS(event.data.buttonDeleteClass), event.data, event.data.deleteRow);
+  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonDelete), event.data, event.data.deleteRow);
 
   // search input
-  event.data.$container.on('keyup.grid-' + event.data.options.id, gS(event.data.searchInputClass), event.data, function(event) {
-    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
+  event.data.$container.on(utils.gEvtNs('keyup'), utils.gS(classes.searchInput), event.data, function(event) {
+    event.data.$container.find(utils.gS(classes.pageSelect)).val(1);
     event.data.keySearchInput(event);
   });
 
   // keyup on a edit input
-  event.data.$container.on('keyup.grid-' + event.data.options.id, event.data, function(event) {
+  event.data.$container.on(utils.gEvtNs('keyup'), event.data, function(event) {
 
     // enter key and a cell is being edited
     if (keyCode.enter == event.which && event.data.getSelectedCell(event)) {
@@ -373,31 +343,31 @@ Grid.prototype.setEvents = function(event) {
   });
 
   // search select
-  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.searchSelectClass), event.data, function(event) {
-    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
+  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.searchSelect), event.data, function(event) {
+    event.data.$container.find(utils.gS(classes.pageSelect)).val(1);
     event.data.buildReadModel(event);
   });
 
   // search field clicking dont order heading
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, gS(event.data.searchFieldClass), event.data, function(event) {
+  event.data.$container.on(utils.gEvtNs('mousedown'), utils.gS(classes.searchField), event.data, function(event) {
     event.stopPropagation();
   });
 
   // order column
-  event.data.$container.on('mousedown.grid-' + event.data.options.id, '.js-grid-cell-heading-orderable', event.data, event.data.mouseHeadingCell);
+  event.data.$container.on(utils.gEvtNs('mousedown'), utils.gS(classes.gridCellHeadingOrderable), event.data, event.data.mouseHeadingCell);
 
   // change page
-  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.pageSelectClass), event.data, event.data.buildReadModel);
+  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.pageSelect), event.data, event.data.buildReadModel);
 
   // change per page
-  event.data.$container.on('change.grid-' + event.data.options.id, gS(event.data.perPageSelectClass), event.data, function() {
-    event.data.$container.find(gS(event.data.pageSelectClass)).val(1);
+  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.perPageSelect), event.data, function() {
+    event.data.$container.find(utils.gS(classes.pageSelect)).val(1);
     event.data.buildReadModel(event);
   });
 
   // remove all filtering
   // could make a render from scratch function?
-  event.data.$container.on('click.grid-' + event.data.options.id, gS(event.data.buttonRemoveFiltersClass), event.data, function() {
+  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonRemoveFilters), event.data, function() {
     event.data.options = event.data.optionsOriginal;
     event.data.storeReadModel(event, event.data.getReadModelDataDefaults(event));
     event.data.appendSelectOptionsKeyValue(event);
@@ -405,7 +375,7 @@ Grid.prototype.setEvents = function(event) {
     event.data.buildReadModel(event);
   });
 
-  event.data.$container.on('click.grid-' + event.data.options.id, gS('js-grid-button-create'), event.data, function(event) {
+  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonCreate), event.data, function(event) {
 
     dialogueCreate.create({
       mask: true,
@@ -494,24 +464,24 @@ Grid.prototype.buildReadModel = function(event) {
   var data = event.data.getReadModelDataDefaults(event);
 
   // page
-  $pageSelect = event.data.$container.find(gS(event.data.pageSelectClass));
+  $pageSelect = event.data.$container.find(utils.gS(classes.pageSelect));
   if ($pageSelect.length) {
     data.pageCurrent = $pageSelect.val();
   };
 
   // per page
-  $perPageSelect = event.data.$container.find(gS(event.data.perPageSelectClass));
+  $perPageSelect = event.data.$container.find(utils.gS(classes.perPageSelect));
   if ($perPageSelect.length) {
     data.rowsPerPage = $perPageSelect.val();
     event.data.rowsPerPage = $perPageSelect.val(); // store in memory
   };
 
   // search
-  var $searchInputs = event.data.$container.find(gS(event.data.searchFieldClass));
+  var $searchInputs = event.data.$container.find(utils.gS(classes.searchField));
   if ($searchInputs.length) {
     for (var index = $searchInputs.length - 1; index >= 0; index--) {
       var $searchInput = $($searchInputs[index]);
-      var key = $searchInput.closest(gS(event.data.cellHeadingClass)).data('key');
+      var key = $searchInput.closest(utils.gS(classes.cellHeading)).data('key');
       var value = $searchInput.val();
       if (value !== ' ' && value) { // empty search value, better way?
         data.search[key] = value;
@@ -520,7 +490,7 @@ Grid.prototype.buildReadModel = function(event) {
   };
 
   // ordering
-  var $headingCells = event.data.$container.find(gS(event.data.cellHeadingClass));
+  var $headingCells = event.data.$container.find(utils.gS(classes.cellHeading));
   for (var index = $headingCells.length - 1; index >= 0; index--) {
     $headingCell = $($headingCells[index]);
     if ($headingCell.data('order')) {
@@ -551,20 +521,20 @@ Grid.prototype.mouseDocument = function(event) {
   };
 
   // is cell and selected
-  if ($target.hasClass(event.data.cellClass) && $target.hasClass(event.data.selectedClass)) {
+  if ($target.hasClass(classes.cell) && $target.hasClass(classes.selected)) {
     return;
   };
 
   // is cell and not selected
   // deselect then select
-  if ($target.hasClass(event.data.cellClass)) {
+  if ($target.hasClass(classes.cell)) {
     event.data.cellDeselect(event, {persist: true});
     event.data.cellSelect(event, $target);
   };
 };
 
 Grid.prototype.getModelByIndex = function(event, index) {
-  var thKey = event.data.$container.find(gS(event.data.cellHeadingClass)).eq(index).data('key');
+  var thKey = event.data.$container.find(utils.gS(classes.cellHeading)).eq(index).data('key');
   var model;
   for (var index = event.data.options.cols.length - 1; index >= 0; index--) {
     model = event.data.options.cols[index];
@@ -592,15 +562,15 @@ Grid.prototype.rowDeselect = function(event) {
     return;
   };
 
-  $selectedRow.removeClass(event.data.selectedClass);
+  $selectedRow.removeClass(classes.selected);
 };
 
 Grid.prototype.getSelectedRow = function(event) {
-  return event.data.$container.find(gS(event.data.rowClass) + gS(event.data.selectedClass));
+  return event.data.$container.find(utils.gS(classes.row) + utils.gS(classes.selected));
 };
 
 Grid.prototype.getSelectedCell = function(event) {
-  return event.data.$container.find(gS(event.data.cellClass) + gS(event.data.selectedClass));
+  return event.data.$container.find(utils.gS(classes.cell) + utils.gS(classes.selected));
 };
 
 // deselect cell with options relating to persistence
@@ -629,14 +599,14 @@ Grid.prototype.cellDeselect = function(event, options) {
 
   // deselect visibly
   event.data.rowDeselect(event);
-  $selectedCell.removeClass(event.data.selectedClass);
+  $selectedCell.removeClass(classes.selected);
 
   // not editable
   if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
     return;
   };
 
-  var $selectedCellInput = $selectedCell.find(gS(event.data.inputClass));
+  var $selectedCellInput = $selectedCell.find(utils.gS(classes.input));
   var cellHtml;
   var persistedValue = event.data.getRowCellValue(event, $selectedCell);
 
@@ -682,7 +652,7 @@ Grid.prototype.cellDeselect = function(event, options) {
 };
 
 Grid.prototype.getSelectedCellInputValue = function(event) {
-  var $selectedCellInput = event.data.getSelectedCell(event).find(gS(event.data.inputClass));
+  var $selectedCellInput = event.data.getSelectedCell(event).find(utils.gS(classes.input));
 
   if ($selectedCellInput.length) {
     return $selectedCellInput.val();
@@ -713,7 +683,7 @@ Grid.prototype.update = function(event, data) {
 
 Grid.prototype.createRow = function(event) {
   var data = {columns: {}};
-  var $formCreateCells = $('.js-form-create-cell');
+  var $formCreateCells = $(utils.gS(classes.formCreateCell));
   for (var index = $formCreateCells.length - 1; index >= 0; index--) {
     var $formCreateCell = $($formCreateCells[index]);
     data.columns[$formCreateCell.prop('name')] = $formCreateCell.val();
@@ -743,8 +713,8 @@ Grid.prototype.createRow = function(event) {
 Grid.prototype.getSelectedRowPrimaryValue = function(event) {
   var $selectedRow = event.data.getSelectedRow(event);
   var $selectedCell = event.data.getSelectedCell(event);
-  var $primaryHeadingCell = event.data.$container.find(gS(event.data.cellHeadingClass) + '[data-key="' + event.data.primaryKey + '"]');
-  var $primaryCell = $selectedRow.find(gS(event.data.cellClass)).eq($primaryHeadingCell.index());
+  var $primaryHeadingCell = event.data.$container.find(utils.gS(classes.cellHeading) + '[data-key="' + event.data.primaryKey + '"]');
+  var $primaryCell = $selectedRow.find(utils.gS(classes.cell)).eq($primaryHeadingCell.index());
 
   return event.data.getRowCellValue(event, $primaryCell);
 };
@@ -764,31 +734,35 @@ Grid.prototype.selectRowByCell = function(event, $cell) {
 
   // deselect all rows
   event.data.$container
-    .find(gS(event.data.rowClass))
-    .removeClass(event.data.selectedClass);
+    .find(utils.gS(classes.row))
+    .removeClass(classes.selected);
 
   // select row closest to cell
   $cell
-    .closest(gS(event.data.rowClass))
-    .addClass(event.data.selectedClass);
+    .closest(utils.gS(classes.row))
+    .addClass(classes.selected);
 };
 
 // switch the data out with an input / select
 Grid.prototype.cellSelect = function(event, $cell) {
   var template;
   var data = [];
-  $cell.addClass(event.data.selectedClass);
-
-  event.data.selectRowByCell(event, $cell);
-
   var model = event.data.getModelByIndex(event, $cell.index());
-
   var type = event.data.getInputTypeFromModel(model);
-
   var persistedValue = event.data.getRowCellValue(event, $cell);
+  
+  $cell.addClass(classes.selected);
+  event.data.selectRowByCell(event, $cell);
+  
+  var passBack = {
+    primaryKeyValue: event.data.getSelectedRowPrimaryValue(event),
+    cellValue: persistedValue,
+    cellType: type,
+    model: model
+  };
 
-  // optional select td call
-  event.data.options.onSelectCell.call(this, model, type);
+  event.data.options.onSelectCell.call(passBack);
+  event.data.options.onSelectRow.call(passBack);
 
   // not editable
   if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
@@ -820,7 +794,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
   } else if (type == 'select') {
     template = mustacheTemplates.select;
     data.options = model.selectOptionsKeyValue;
-    data.classNames = ['grid-cell-input', event.data.inputClass];
+    data.classNames = ['grid-cell-input', classes.input];
     for (var index = data.options.length - 1; index >= 0; index--) {
       data.options[index].keySelected = persistedValue == data.options[index].key;
     };
@@ -831,12 +805,12 @@ Grid.prototype.cellSelect = function(event, $cell) {
 
   if (type != 'html') {
     $cell.html(mustache.render(template, data));
-    $cell.find(gS(event.data.inputClass)).val(persistedValue).focus().select();
+    $cell.find(utils.gS(classes.input)).val(persistedValue).focus().select();
   }
 };
 
 Grid.prototype.getRowCellValue = function(event, $cell) {
-  var rowPos = $cell.parent(gS(event.data.rowClass)).index();
+  var rowPos = $cell.parent(utils.gS(classes.row)).index();
   var cellPos = $cell.index();
   return event.data.rowsCurrent[rowPos - 1][cellPos]['value'];
 };

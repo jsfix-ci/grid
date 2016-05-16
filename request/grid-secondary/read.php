@@ -40,7 +40,7 @@ foreach ($rows as $row) {
     $goodRows[] = [
         $row['id'],
         $row['sku'],
-        $row['html'],
+        $row['name'],
         $row['barcode'],
         $row['supplier']
     ];

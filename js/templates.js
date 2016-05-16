@@ -56,7 +56,7 @@ templates.grid = [
         '{{#selectOptionsKeyValue.length}}',
 
       '<div class="grid-heading-search-container">',
-        '<select name="" id="" class="js-grid-search-field js-grid-search-select">',
+        '<select name="" id="" class="js-grid-search-field grid-search-select js-grid-search-select">',
           '<option value=" "></option>',
 
           '{{#selectOptionsKeyValue}}',
