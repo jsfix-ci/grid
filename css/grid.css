@@ -4,12 +4,14 @@
 
 .grid-table {
   width: 100%;
+      border-collapse:collapse;
+    table-layout:fixed;
 }
 
 .grid-cell-base {
   position: relative;
   padding: var(--cell-spacing);
-  border: 1px solid #cccccc;
+  border: none;
   font-size: 12px;
 }
 
@@ -28,7 +30,6 @@
   white-space: nowrap;
 }
 
-
 .grid-cell-input {
   display: block;
   width: 100%;
@@ -36,9 +37,8 @@
 
 .grid-cell-heading {
   background-color: #eeeeee;
-  /*position: relative;*/
   padding: var(--cell-spacing) 0 0;
-  border: 1px solid #cccccc;
+  border: none;
   font-size: 12px;
 }
 
@@ -48,6 +48,12 @@
 
 .is-order-desc {
   background: blue;
+}
+
+.grid-row {
+  transition-property: opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
 }
 
 .grid-row:hover {
@@ -60,7 +66,6 @@ body {
 
 .grid-container {
   margin: 2em 0;
-  overflow-x: scroll;
 }
 
 .grid-form-create-row {
@@ -93,21 +98,6 @@ body {
 
 .grid-is-filtering .grid-button-remove-filters {
   display: block;
-}
-
-.grid-button-remove-filters {
-  display: none;
-  float: right;
-  font-size: 12px;
-  background: red;
-  padding: 3px var(--cell-spacing);
-  margin-bottom: var(--cell-spacing);
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.grid-spinner {
-  padding: 40px;
 }
 
 .grid-spinner-single {
@@ -155,25 +145,25 @@ body {
 
 .grid-heading-is-order-desc .grid-cell-heading-name:before {
   border-top-color: transparent;
-  bottom: 1px;
+  bottom: -1px;
 }
 
 .grid-heading-is-order-asc .grid-cell-heading-name:before {
   border-bottom-color: transparent;
-  bottom: -4px;
+  bottom: -6px;
 }
 
 .grid-cell-heading-name:before {
   display: none;
   width: 10px;
-  border-width: var(--cell-spacing);
+  border-width: 5px;
   border-style: solid;
   border-left-color: transparent;
   border-right-color: transparent;
   content: '';
   float: right;
   position: relative;
-  right: 4px;
+  right: 5px;
 }
 
 .grid-no-rows {
@@ -218,7 +208,7 @@ body {
 
 .grid-cell-heading-name {
     margin-bottom: 4px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .grid-search-select {
@@ -231,4 +221,47 @@ body {
   margin: 0;
   width: 100%;
   border-radius: var(--border-radius);
+}
+
+.is-reading .grid-row {
+    opacity: .3;
+}
+
+.grid-table-container {
+    position: relative;
+}
+
+.grid-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -13px;
+    margin-top: -13px;
+}
+
+.grid-button-remove-filters {
+  display: none;
+  font-size: 12px;
+  background: var(--color-secondary-1-0);
+  padding: 3px var(--cell-spacing);
+  margin-bottom: var(--cell-spacing);
+  color: #ffffff;
+  cursor: pointer;
+
+    float: left;
+  
+    padding: 3px 25px 3px 6px;
+    border-radius: 3px;
+    position: relative;
+}
+
+.grid-button-remove-filters-cross {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 16px;
+    width: 23px;
+    height: 23px;
+    line-height: 1.4;
+    text-align: center;
 }

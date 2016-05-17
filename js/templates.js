@@ -43,7 +43,7 @@ templates.formCreate = [
 ].join('\n');
 
 templates.grid = [
-  '<div class="grid-button-remove-filters js-grid-button-remove-filters">Remove Filters</div>',
+  '<div class="grid-table-container js-grid-table-container">',
   '<table class="grid-table js-grid-table">',
     '<tr class="js-grid-row-heading">',
 
@@ -82,6 +82,7 @@ templates.grid = [
 
     '</tr>',
   '</table>',
+  '</div>',
   '<div class="grid-pagination-container js-grid-pagination-container"></div>',
 
   '{{#url.create}}',
@@ -92,6 +93,8 @@ templates.grid = [
 ].join('\n');
 
 templates.pagination = [
+  '<div class="grid-button-remove-filters js-grid-button-remove-filters">Remove Filters<span class="grid-button-remove-filters-cross">&times;</span></div>',
+  
   'page',
 
   '{{#selectPages}}',

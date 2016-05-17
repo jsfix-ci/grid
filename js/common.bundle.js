@@ -24,7 +24,7 @@ gridPrimary.create({
   },
   cols: [
     {
-      width: 10,
+      width: 5,
       key: 'id',
       name: 'ID',
       primaryKey: true,
@@ -34,7 +34,7 @@ gridPrimary.create({
       readTemplate: '<a href="#" class="link">{{.}}</a>'
     },
     {
-      width: 6,
+      width: 15,
       search: true,
       key: 'sku',
       name: 'SKU',
@@ -44,7 +44,7 @@ gridPrimary.create({
       required: true
     },
     {
-      width: 6,
+      width: 25,
       edit: false,
       order: true,
       type: 'text',
@@ -53,7 +53,7 @@ gridPrimary.create({
       required: true
     },
     {
-      width: 6,
+      width: 10,
       order: true,
       type: 'number',
       key: 'stock',
@@ -61,7 +61,7 @@ gridPrimary.create({
       edit: false
     },
     {
-      width: 6,
+      width: 10,
       order: true,
       search: true,
       edit: false,
@@ -75,7 +75,7 @@ gridPrimary.create({
       }
     },
     {
-      width: 6,
+      width: 10,
       edit: false,
       key: 'supplier',
       name: 'Supplier',
@@ -86,7 +86,7 @@ gridPrimary.create({
       }
     },
     {
-      width: 6,
+      width: 10,
       key: 'requiresCount',
       name: 'Rq Count',
       search: true,
@@ -97,7 +97,7 @@ gridPrimary.create({
       }
     },
     {
-      width: 6,
+      width: 10,
       key: 'print',
       name: 'Print',
       edit: false

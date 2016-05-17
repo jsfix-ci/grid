@@ -6,9 +6,6 @@ var mustacheTemplates = require('./templates');
 var dialogueFactory = require('mwyatt-dialogue');
 var feedbackQueueFactory = require('mwyatt-feedback-queue');
 var classes = require('./classes');
-
-var keyCode = {enter: 13, esc: 27};
-var timeoutId;
 var tinymceConfig = {
   selector: '.js-grid-dialogue-wysi-textarea',
   height: 400,
@@ -28,6 +25,9 @@ var tinymceConfig = {
     });
   }
 };
+
+var keyCode = {enter: 13, esc: 27};
+var timeoutId;
 var dialogueCreate = new dialogueFactory();
 var dialogueCellWysi = new dialogueFactory();
 var dialogue = new dialogueFactory();
@@ -130,17 +130,15 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
 Grid.prototype.read = function(event, data) {
 
   // clear out no results pane
-  event.data.$container.find(utils.gS('js-grid-no-rows')).remove();
+  event.data.$container.find(utils.gS(classes.noResults)).remove();
 
-  // clear out old rows
-  event.data.$container
-    .find(utils.gS(classes.row))
-    .remove();
+  // fade out old rows
+  event.data.$container.addClass(classes.reading);
 
   // spin time
   event.data.$container
-    .find(utils.gS(classes.table))
-    .after(mustache.render(mustacheTemplates.spinner));
+    .find(utils.gS(classes.tableContainer))
+    .append(mustache.render(mustacheTemplates.spinner));
 
   // get new fun rows
   $.ajax({
@@ -149,7 +147,9 @@ Grid.prototype.read = function(event, data) {
     dataType: 'json',
     data: data,
     complete: function() {
+      event.data.$container.removeClass(classes.reading);
       event.data.$container.find(utils.gS(classes.spinner)).remove();
+      event.data.$container.hide().show(0);
     },
     success: function(response) {
       if (
@@ -212,6 +212,9 @@ Grid.prototype.getPageCurrent = function(event) {
 };
 
 Grid.prototype.readRender = function(event, rows) {
+
+  // remove any existing rows
+  event.data.$container.find(utils.gS(classes.row)).remove();
 
   // find out if any html models exist
   // replace the data with a blank space, or class
@@ -319,8 +322,7 @@ Grid.prototype.deleteRow = function(event) {
 
 Grid.prototype.setEvents = function(event) {
 
-  // clicking the document
-  // could be a cell or row!
+  // clicking the cell
   event.data.$container.on(utils.gEvtNs('mouseup'), event.data, event.data.mouseDocument);
 
   event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonDelete), event.data, event.data.deleteRow);
@@ -349,12 +351,12 @@ Grid.prototype.setEvents = function(event) {
   });
 
   // search field clicking dont order heading
-  event.data.$container.on(utils.gEvtNs('mousedown'), utils.gS(classes.searchField), event.data, function(event) {
+  event.data.$container.on(utils.gEvtNs('mouseup'), utils.gS(classes.searchField), event.data, function(event) {
     event.stopPropagation();
   });
 
   // order column
-  event.data.$container.on(utils.gEvtNs('mousedown'), utils.gS(classes.gridCellHeadingOrderable), event.data, event.data.mouseHeadingCell);
+  event.data.$container.on(utils.gEvtNs('mouseup'), utils.gS(classes.gridCellHeadingOrderable), event.data, event.data.mouseHeadingCell);
 
   // change page
   event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.pageSelect), event.data, event.data.buildReadModel);
@@ -751,7 +753,6 @@ Grid.prototype.cellSelect = function(event, $cell) {
   var type = event.data.getInputTypeFromModel(model);
   var persistedValue = event.data.getRowCellValue(event, $cell);
   
-  $cell.addClass(classes.selected);
   event.data.selectRowByCell(event, $cell);
   
   var passBack = {
@@ -768,6 +769,8 @@ Grid.prototype.cellSelect = function(event, $cell) {
   if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
     return;
   };
+
+  $cell.addClass(classes.selected);
 
   // replace html for input using data value
   if (type == 'html') {
@@ -788,6 +791,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
       actions: {
         Save: function() {
           event.data.cellDeselect(event, {persist: true});
+          dialogueCellWysi.close();
         }
       }
     });
