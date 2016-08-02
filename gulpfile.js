@@ -15,6 +15,7 @@ var settings = {
   media: ['media/']
 };
 
+var watchify = require('watchify');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var gulpConcat = require('gulp-concat');

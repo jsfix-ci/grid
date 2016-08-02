@@ -2,7 +2,17 @@ var $ = require('jquery');
 var tinymce = require('tinymce');
 var mustache = require('mustache');
 var utils = require('./utilities');
-var mustacheTemplates = require('./templates');
+
+var templateNoRowsPane = require('./noRowsPane.mustache');
+var templateDeleteButton = require('./deleteButton.mustache');
+var templateInput = require('./input.mustache');
+var templateSelect = require('./select.mustache');
+var templateSpinner = require('./spinner.mustache');
+var templateRows = require('./rows.mustache');
+var templateFormCreate = require('./formCreate.mustache');
+var templateGrid = require('./grid.mustache');
+var templatePagination = require('./pagination.mustache');
+
 var dialogueFactory = require('mwyatt-dialogue');
 var feedbackQueueFactory = require('mwyatt-feedback-queue');
 var classes = require('./classes');
@@ -62,7 +72,7 @@ Grid.prototype.create = function(options) {
   };
 
   // put grid container in dom
-  this.$container.html(mustache.render(mustacheTemplates.grid, this.options));
+  this.$container.html(mustache.render(templateGrid, this.options));
 
   this.setEvents({data: this});
   this.storeInitialData();
@@ -138,7 +148,7 @@ Grid.prototype.read = function(event, data) {
   // spin time
   event.data.$container
     .find(utils.gS(classes.tableContainer))
-    .append(mustache.render(mustacheTemplates.spinner));
+    .append(mustache.render(templateSpinner));
 
   // get new fun rows
   $.ajax({
@@ -198,12 +208,12 @@ Grid.prototype.renderPagination = function(event, response) {
   };
 
   // render pagination
-  event.data.$container.find(utils.gS(classes.pageContainer)).html(mustache.render(mustacheTemplates.pagination, {
+  event.data.$container.find(utils.gS(classes.pageContainer)).html(mustache.render(templatePagination, {
       possiblePages: possiblePages,
       selectPages: {options: options, classNames: ['grid-pagination-select', classes.pageSelect]},
       selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', classes.perPageSelect]},
       rowsTotal: rowsTotal
-    }, {select: mustacheTemplates.select}));
+    }, {select: templateSelect}));
 };
 
 Grid.prototype.getPageCurrent = function(event) {
@@ -251,7 +261,7 @@ Grid.prototype.readRender = function(event, rows) {
     };
   };
 
-  event.data.$container.find(utils.gS(classes.rowHeading)).after(mustache.render(mustacheTemplates.rows, rows));
+  event.data.$container.find(utils.gS(classes.rowHeading)).after(mustache.render(templateRows, rows));
 
   if (rows.length) {
 
@@ -260,13 +270,13 @@ Grid.prototype.readRender = function(event, rows) {
       var $rows = event.data.$container.find(utils.gS(classes.row));
       for (var index = $rows.length - 1; index >= 0; index--) {
         var $row = $($rows[index]);
-        $row.find(utils.gS(classes.cell)).last().append(mustache.render(mustacheTemplates.deleteButton));
+        $row.find(utils.gS(classes.cell)).last().append(mustache.render(templateDeleteButton));
       };
     };
   } else {
     event.data.$container
       .find(utils.gS(classes.table))
-      .after(mustache.render(mustache.render(mustacheTemplates.noRowsPane)));
+      .after(mustache.render(mustache.render(templateNoRowsPane)));
   };
 };
 
@@ -373,7 +383,7 @@ Grid.prototype.setEvents = function(event) {
     event.data.options = event.data.optionsOriginal;
     event.data.storeReadModel(event, event.data.getReadModelDataDefaults(event));
     event.data.appendSelectOptionsKeyValue(event);
-    event.data.$container.html(mustache.render(mustacheTemplates.grid, event.data.options));
+    event.data.$container.html(mustache.render(templateGrid, event.data.options));
     event.data.buildReadModel(event);
   });
 
@@ -413,7 +423,7 @@ Grid.prototype.getCreateFormHtml = function(event) {
     };
   };
 
-  return mustache.render(mustacheTemplates.formCreate, data.reverse());
+  return mustache.render(templateFormCreate, data.reverse());
 };
 
 Grid.prototype.mouseHeadingCell = function(event) {
@@ -796,14 +806,14 @@ Grid.prototype.cellSelect = function(event, $cell) {
       }
     });
   } else if (type == 'select') {
-    template = mustacheTemplates.select;
+    template = templateSelect;
     data.options = model.selectOptionsKeyValue;
     data.classNames = ['grid-cell-input', classes.input];
     for (var index = data.options.length - 1; index >= 0; index--) {
       data.options[index].keySelected = persistedValue == data.options[index].key;
     };
   } else {
-    template = mustacheTemplates.input;
+    template = templateInput;
     data = {type: 'text', value: persistedValue};
   };
 
