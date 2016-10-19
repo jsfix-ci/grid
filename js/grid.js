@@ -24,6 +24,8 @@ var feedbackQueue = new feedbackQueueFactory()
 var tinymceConfig = {
   selector: '.js-grid-dialogue-wysi-textarea',
   height: 400,
+  relative_urls: true,
+  convert_urls: false,
   plugins: [
     'advlist autolink lists link image charmap print preview anchor',
     'searchreplace visualblocks code fullscreen',
@@ -674,7 +676,7 @@ Grid.prototype.getSelectedCellInputValue = function(event) {
 // persist a row cell
 Grid.prototype.update = function(event, data) {
   $.ajax({
-    type: 'get',
+    type: 'post',
     url: event.data.options.url.update,
     dataType: 'json',
     data: data,
