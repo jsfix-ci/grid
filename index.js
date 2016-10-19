@@ -1,1 +1,1 @@
-require('js/grid');
+require('./js/grid');
