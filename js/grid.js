@@ -36,7 +36,7 @@ var tinymceConfig = {
   ],
   setup: function(editor) {
     editor.on('init', function() {
-      dialogueCellWysi.applyCss({data: dialogueCellWysi})
+      dialogueCellWysi.reposition()
     })
   }
 }
