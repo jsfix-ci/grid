@@ -1,8 +1,8 @@
-var $ = require('jquery');
-var tinymce = require('tinymce');
-var gridFactory = require('./grid');
-var gridPrimary = new gridFactory();
-var gridSecondary = new gridFactory();
+var $ = require('jquery')
+var tinymce = require('tinymce')
+var gridFactory = require('./grid')
+var gridPrimary = new gridFactory()
+var gridSecondary = new gridFactory()
 
 gridPrimary.create({
   id: 'primary',
@@ -15,9 +15,9 @@ gridPrimary.create({
   },
   onSelectCell: function(config) {
     // if (model.key == 'id') {
-    //   console.log('id selected');
+    //   console.log('id selected')
     // }
-    // console.log('onSelectCell', this, model, type);
+    // console.log('onSelectCell', this, model, type)
   },
   onSelectRow: function(config) {
     // gridSecondary.doSomething
@@ -103,7 +103,7 @@ gridPrimary.create({
       edit: false
     }
   ]
-});
+})
 
 gridSecondary.create({
   id: 'secondary',
@@ -155,4 +155,4 @@ gridSecondary.create({
       }
     }
   ]
-});
+})
