@@ -34,11 +34,10 @@ Grid.prototype.create = function(options) {
   this.optionsPristine = $.extend(true, {}, this.options) // true = deep copy
   this.rowsPerPage = getRowsPerPage(this)
   optionsValidate(this.options)
-  createSelectOptionsKeyValue(this)
+  addPrimaryKeyToGrid(this)
   setupContainer(this)
+  setupRenderAreaAndRead(this)
   setEvents(this)
-  storeInitialData(this)
-  read(this, getFirstReadModel(this))
 }
 
 function setupContainer(grid) {
@@ -47,7 +46,13 @@ function setupContainer(grid) {
   if (!grid.$container.length) {
     console.warn('container not found in the dom', containerSelector)
   }
+}
+
+function setupRenderAreaAndRead(grid) {
+  addSelectOptionsKeyValueToCols(grid)
+  buildReadModel(grid)
   grid.$container.html(mustache.render(templateGrid, grid.options))
+  read(grid, getFirstReadModel(grid))
 }
 
 function optionsValidate(options) {
@@ -94,24 +99,21 @@ function getFirstReadModel(grid) {
 
 // this structure is needed so that you can loop as an array
 // factors in stored model to render selected items correctly
-function createSelectOptionsKeyValue(grid) {
+function addSelectOptionsKeyValueToCols(grid) {
   var storedModel = getStoredReadModel(grid)
-  grid.options.cols.forEach(function(col) {
+  grid.options.cols.forEach(function(col, index) {
     if ('selectOptions' in col) {
       col.selectOptionsKeyValue = []
       for (var key in col.selectOptions) {
         var value = col.selectOptions[key]
         var storedModelValue
         var selected
-
         if (typeof storedModel != 'undefined') {
           if (typeof storedModel.search != 'undefined') {
             storedModelValue = col.selectOptions[storedModel.search[col.key]]
           }
-
           selected = 'search' in storedModel && col.key in storedModel.search && storedModelValue == value
         }
-
         col.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
@@ -119,17 +121,17 @@ function createSelectOptionsKeyValue(grid) {
         })
       }
     }
-
     if ('search' in col && col.search) {
       if ('search' in storedModel && col.key in storedModel.search) {
         col.searchDefaultValue = storedModel.search[col.key]
       }
     }
-    this.options.cols[index] = col
+    grid.options.cols[index] = col
   })
 }
 
 function read(grid, data) {
+  var storedModel = getStoredReadModel(grid)
   markContainerFiltering(grid, storedModel)
 
   // clear out no results pane
@@ -159,7 +161,6 @@ function read(grid, data) {
       ) {
         return console.warn('read response malformed', response)
       }
-
       readRender(grid, response.rows)
       renderPagination(grid, response)
       storeReadModel(grid, data)
@@ -195,8 +196,8 @@ function renderPagination(grid, response) {
   // render pagination
   grid.$container.find(gS(classes.pageContainer)).html(mustache.render(templatePagination, {
       possiblePages: possiblePages,
-      selectPages: {options: options, classNames: ['grid-pagination-select', classes.pageSelect]},
-      selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', classes.perPageSelect]},
+      selectPages: {options: options, classNames: ['form-select', 'grid-pagination-select', classes.pageSelect]},
+      selectPerPage: {options: optionsPerPage, classNames: ['form-select', 'grid-pagination-select', classes.perPageSelect]},
       rowsTotal: rowsTotal
     }, {select: templateSelect}))
 }
@@ -206,67 +207,54 @@ function getPageCurrent(grid) {
   return pageCurrent > 0 ? pageCurrent : 1
 }
 
-function readRender(grid, rows) {
-
-  // remove any existing rows
-  grid.$container.find(gS(classes.row)).remove()
-
-  // find out if any html models exist
-  // replace the data with a blank space, or class
-
-  // transform row values
-  // select boxes appear are represented as the value
-  // if the cell has a 'readTemplate' then it needs to be passed through that
-  for (var indexRow = rows.length - 1; indexRow >= 0; indexRow--) {
-
-    // step through each model and compare the row value with the same index and switch it out
-    for (var indexCell = 0; indexCell <= rows[indexRow].length - 1; indexCell++) {
-      var value = rows[indexRow][indexCell]
-
-      // change to new format html defaults to value
-      rows[indexRow][indexCell] = {value: value, html: value}
-
+// takes all rows from read response and creates nice object
+// which may changed the display values before rendering
+function getReadRowsAsObject(grid, rows) {
+  var rowsObject = []
+  rows.forEach(function(row, indexRow) {
+    var rowObject = []
+    row.forEach(function(cellValue, indexCell) {
+      var cellObject = {value: cellValue, html: cellValue}
       var model = getModelByIndex(grid, indexCell)
-
-      // select box value
-      if ('selectOptions' in model) {
-        if (value in model.selectOptions) {
-          rows[indexRow][indexCell].html = model.selectOptions[value]
+      if (model) {
+        if ('selectOptions' in model) {
+          if (cellValue in model.selectOptions) {
+            cellObject.html = model.selectOptions[cellValue]
+          }
+        }
+        if ('type' in model && model.type == 'html') {
+          cellObject.html = 'html'
+        }
+        if ('readTemplate' in model) {
+          cellObject.html = mustache.render(model.readTemplate, [cellValue])
         }
       }
+      rowObject.push(cellObject)
+    })
+    rowsObject.push(rowObject)
+  })
+  return rowsObject;
+}
 
-      if ('type' in model && model.type == 'html') {
-        rows[indexRow][indexCell].html = 'html'
-      }
-
-      // mst template
-      if ('readTemplate' in model) {
-        rows[indexRow][indexCell].html = mustache.render(model.readTemplate, [value])
-      }
-    }
-  }
-
-  grid.$container.find(gS(classes.rowHeading)).after(mustache.render(templateRows, rows))
-
+function readRender(grid, rows) {
+  var rowsObject = getReadRowsAsObject(grid, rows)
+  grid.$container.find(gS(classes.row)).remove()
+  grid.$container.find(gS(classes.rowHeading)).after(mustache.render(templateRows, rowsObject))
   if (rows.length) {
-
-    // attach delete button
     if ('delete' in grid.options.url) {
       var $rows = grid.$container.find(gS(classes.row))
-      for (var index = $rows.length - 1; index >= 0; index--) {
-        var $row = $($rows[index])
+      for (var i = $rows.length - 1; i >= 0; i--) {
+        var $row = $($rows[i])
         $row.find(gS(classes.cell)).last().append(mustache.render(templateDeleteButton))
       }
     }
   } else {
-    grid.$container
-      .find(gS(classes.table))
-      .after(mustache.render(mustache.render(templateNoRowsPane)))
+    grid.$container.find(gS(classes.table)).after(mustache.render(mustache.render(templateNoRowsPane)))
   }
 }
 
 // extract primary key and store
-function storeInitialData(grid) {
+function addPrimaryKeyToGrid(grid) {
   for (var index = grid.options.cols.length - 1; index >= 0; index--) {
     if ('primaryKey' in grid.options.cols[index]) {
       grid.primaryKey = grid.options.cols[index].key
@@ -370,7 +358,7 @@ function setEvents(grid) {
     resetAll(grid)
   })
 
-  grid.$container.on(gEvtNs('click'), gS(classes.buttonCreate), grid, function(event) {
+  grid.$container.on(gEvtNs('click'), gS(classes.buttonCreate), function(event) {
     openCreateRow(grid)
   })
 }
@@ -395,10 +383,9 @@ function openCreateRow(grid) {
 
 function resetAll(grid) {
   grid.options = grid.optionsPristine
+  addSelectOptionsKeyValueToCols(grid)
   storeReadModel(grid, getReadModelDataDefaults(grid))
-  createSelectOptionsKeyValue(grid)
-  grid.$container.html(mustache.render(templateGrid, grid.options))
-  buildReadModel(grid)
+  setupRenderAreaAndRead(grid)
 }
 
 function getCreateFormHtml(grid) {
@@ -495,19 +482,18 @@ function buildReadModel(grid) {
       data.order[key] = value
     }
   }
-
   read(grid, data)
 }
 
-function markContainerFiltering(grid, data) {
+function markContainerFiltering(grid, storedModel) {
   grid.$container.removeClass('grid-is-filtering')
-  if (isFilterActive()) {
+  if (isFilterActive(storedModel)) {
     grid.$container.addClass('grid-is-filtering')
   }
 }
 
-function isFilterActive(grid, data) {
-  return ('search' in data && !$.isEmptyObject(data.search)) || ('order' in data && !$.isEmptyObject(data.order))
+function isFilterActive(storedModel) {
+  return ('search' in storedModel && !$.isEmptyObject(storedModel.search)) || ('order' in storedModel && !$.isEmptyObject(storedModel.order))
 }
 
 function onMouseUpCell(grid, $target) {
