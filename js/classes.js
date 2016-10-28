@@ -1,26 +1,24 @@
-var classes = {};
-
-classes.gridCellHeadingOrderable = 'js-grid-cell-heading-orderable';
-classes.formCreateCell = 'js-form-create-cell';
-classes.selected = 'is-selected';
-classes.reading = 'is-reading';
-classes.cellHeading = 'js-grid-cell-heading';
-classes.table = 'js-grid-table';
-classes.tableContainer = 'js-grid-table-container';
-classes.row = 'js-grid-row';
-classes.rowHeading = 'js-grid-row-heading';
-classes.cell = 'js-grid-cell';
-classes.input = 'js-grid-cell-input';
-classes.searchField = 'js-grid-search-field';
-classes.searchInput = 'js-grid-search-input';
-classes.searchSelect = 'js-grid-search-select';
-classes.pageSelect = 'js-grid-pagination-select';
-classes.perPageSelect = 'js-grid-cell-input-perpage';
-classes.pageContainer = 'js-grid-pagination-container';
-classes.buttonRemoveFilters = 'js-grid-button-remove-filters';
-classes.spinner = 'js-grid-spinner';
-classes.buttonDelete = 'js-grid-row-button-delete';
-classes.buttonCreate = 'js-grid-button-create';
-classes.noResults = 'js-grid-no-rows';
-
-module.exports = classes;
+module.exports = {
+  gridCellHeadingOrderable: 'js-grid-cell-heading-orderable',
+  formCreateCell: 'js-form-create-cell',
+  selected: 'is-selected',
+  reading: 'is-reading',
+  cellHeading: 'js-grid-cell-heading',
+  table: 'js-grid-table',
+  tableContainer: 'js-grid-table-container',
+  row: 'js-grid-row',
+  rowHeading: 'js-grid-row-heading',
+  cell: 'js-grid-cell',
+  input: 'js-grid-cell-input',
+  searchField: 'js-grid-search-field',
+  searchInput: 'js-grid-search-input',
+  searchSelect: 'js-grid-search-select',
+  pageSelect: 'js-grid-pagination-select',
+  perPageSelect: 'js-grid-cell-input-perpage',
+  pageContainer: 'js-grid-pagination-container',
+  buttonRemoveFilters: 'js-grid-button-remove-filters',
+  spinner: 'js-grid-spinner',
+  buttonDelete: 'js-grid-row-button-delete',
+  buttonCreate: 'js-grid-button-create',
+  noResults: 'js-grid-no-rows'
+}

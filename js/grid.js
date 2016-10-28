@@ -1,10 +1,12 @@
 var $ = require('jquery')
 var tinymce = require('tinymce')
 var mustache = require('mustache')
-var utils = require('./utilities')
 var dialogueFactory = require('mwyatt-dialogue')
 var feedbackQueueFactory = require('mwyatt-feedback-queue')
 var classes = require('./classes')
+var tinymceConfig = require('./tinymceConfig')
+var createDefaults = require('./createDefaults')
+
 var templateNoRowsPane = require('./noRowsPane.mustache')
 var templateDeleteButton = require('./deleteButton.mustache')
 var templateInput = require('./input.mustache')
@@ -21,106 +23,96 @@ var dialogueCreate = new dialogueFactory()
 var dialogueCellWysi = new dialogueFactory()
 var dialogue = new dialogueFactory()
 var feedbackQueue = new feedbackQueueFactory()
-var tinymceConfig = {
-  selector: '.js-grid-dialogue-wysi-textarea',
-  height: 400,
-  relative_urls: true,
-  convert_urls: false,
-  plugins: [
-    'advlist autolink lists link image charmap print preview anchor',
-    'searchreplace visualblocks code fullscreen',
-    'insertdatetime media table contextmenu paste code'
-  ],
-  toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
-  content_css: [
-    '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
-    '//www.tinymce.com/css/codepen.min.css'
-  ],
-  setup: function(editor) {
-    editor.on('init', function() {
-      dialogueCellWysi.reposition()
-    })
-  }
-}
 
 var Grid = function() {
-  this.rowsCurrent = [] // collection of rows read in currently
-
-  if (typeof localStorage === 'undefined') {
-    console.warn('localStorage is not defined')
-  }
-  if (typeof JSON === 'undefined') {
-    console.warn('JSON is not defined')
-  }
+  this.rowsCurrent = []
+  checkBrowserSupport()
 }
 
 Grid.prototype.create = function(options) {
-  var defaults = {
-    onSelectCell: function() {},
-    onSelectRow: function() {},
-  }
-  this.options = $.extend(defaults, options)
-  this.optionsOriginal = $.extend(true, {}, this.options) // true = deep copy
-  this.appendSelectOptionsKeyValue({data: this})
-
-  this.rowsPerPage = this.getRowsPerPage({data: this})
-
-  var containerSelector = utils.gS(utils.getContainerSelector(this.options.id))
-  this.$container = $(containerSelector)
-  if (!this.$container.length) {
-    console.warn('container not found in the dom', containerSelector)
-  }
-
-  // put grid container in dom
-  this.$container.html(mustache.render(templateGrid, this.options))
-
-  this.setEvents({data: this})
-  this.storeInitialData()
-
-  this.read({data: this}, this.getFirstReadModel({data: this}))
+  this.options = $.extend(createDefaults, options)
+  this.optionsPristine = $.extend(true, {}, this.options) // true = deep copy
+  this.rowsPerPage = getRowsPerPage(this)
+  optionsValidate(this.options)
+  createSelectOptionsKeyValue(this)
+  setupContainer(this)
+  setEvents(this)
+  storeInitialData(this)
+  read(this, getFirstReadModel(this))
 }
 
-Grid.prototype.getRowsPerPage = function(event) {
-  var storedModel = event.data.getStoredReadModel(event)
+function setupContainer(grid) {
+  var containerSelector = gS(getContainerSelector(grid.options.id))
+  grid.$container = $(containerSelector)
+  if (!grid.$container.length) {
+    console.warn('container not found in the dom', containerSelector)
+  }
+  grid.$container.html(mustache.render(templateGrid, grid.options))
+}
+
+function optionsValidate(options) {
+  if (!options.id.length) {
+    console.warn('missing', 'options.id')
+  }
+  if (!options.url.read.length) {
+    console.warn('missing', 'options.url.read')
+  }
+  if (!options.cols.length) {
+    console.warn('missing', 'options.cols')
+  }
+}
+
+function getRowsPerPage(grid) {
+  var storedModel = getStoredReadModel(grid)
   if ('rowsPerPage' in storedModel) {
     return storedModel.rowsPerPage
   }
-  return event.data.options.perPageOptions[0]
+  return grid.options.perPageOptions[0]
 }
 
-Grid.prototype.getFirstReadModel = function(event) {
-  var storedModel = event.data.getStoredReadModel(event)
+// obtains css selector version of a class name
+function gS(className) {
+  return '.' + className;
+}
+
+// obtain event namespaced
+function gEvtNs(eventName) {
+  return eventName + '.grid';
+}
+
+function getContainerSelector(id) {
+  return 'js-grid-' + id + '-container';
+}
+
+function getFirstReadModel(grid) {
+  var storedModel = getStoredReadModel(grid)
   if (!$.isEmptyObject(storedModel)) {
-    event.data.markContainerFiltering(event, storedModel)
     return storedModel
   }
-  return event.data.getReadModelDataDefaults(event)
+  return getReadModelDataDefaults(grid)
 }
 
 // this structure is needed so that you can loop as an array
 // factors in stored model to render selected items correctly
-Grid.prototype.appendSelectOptionsKeyValue = function(event) {
-  var storedModel = event.data.getStoredReadModel(event)
-
-  for (var index = this.options.cols.length - 1; index >= 0; index--) {
-    var model = this.options.cols[index]
-
-    if ('selectOptions' in model) {
-      model.selectOptionsKeyValue = []
-      for (var key in model.selectOptions) {
-        var value = model.selectOptions[key]
+function createSelectOptionsKeyValue(grid) {
+  var storedModel = getStoredReadModel(grid)
+  grid.options.cols.forEach(function(col) {
+    if ('selectOptions' in col) {
+      col.selectOptionsKeyValue = []
+      for (var key in col.selectOptions) {
+        var value = col.selectOptions[key]
         var storedModelValue
         var selected
 
         if (typeof storedModel != 'undefined') {
           if (typeof storedModel.search != 'undefined') {
-            storedModelValue = model.selectOptions[storedModel.search[model.key]]
+            storedModelValue = col.selectOptions[storedModel.search[col.key]]
           }
 
-          selected = 'search' in storedModel && model.key in storedModel.search && storedModelValue == value
+          selected = 'search' in storedModel && col.key in storedModel.search && storedModelValue == value
         }
 
-        model.selectOptionsKeyValue.push({
+        col.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
           value: value
@@ -128,38 +120,36 @@ Grid.prototype.appendSelectOptionsKeyValue = function(event) {
       }
     }
 
-    if ('search' in model && model.search) {
-      if ('search' in storedModel && model.key in storedModel.search) {
-        model.searchDefaultValue = storedModel.search[model.key]
+    if ('search' in col && col.search) {
+      if ('search' in storedModel && col.key in storedModel.search) {
+        col.searchDefaultValue = storedModel.search[col.key]
       }
     }
-    this.options.cols[index] = model
-  }
+    this.options.cols[index] = col
+  })
 }
 
-Grid.prototype.read = function(event, data) {
+function read(grid, data) {
+  markContainerFiltering(grid, storedModel)
 
   // clear out no results pane
-  event.data.$container.find(utils.gS(classes.noResults)).remove()
+  grid.$container.find(gS(classes.noResults)).remove()
 
   // fade out old rows
-  event.data.$container.addClass(classes.reading)
+  grid.$container.addClass(classes.reading)
 
   // spin time
-  event.data.$container
-    .find(utils.gS(classes.tableContainer))
-    .append(mustache.render(templateSpinner))
+  grid.$container.find(gS(classes.tableContainer)).append(mustache.render(templateSpinner))
 
-  // get new fun rows
   $.ajax({
     type: 'get',
-    url: event.data.options.url.read,
+    url: grid.options.url.read,
     dataType: 'json',
     data: data,
     complete: function() {
-      event.data.$container.removeClass(classes.reading)
-      event.data.$container.find(utils.gS(classes.spinner)).remove()
-      event.data.$container.hide().show(0)
+      grid.$container.removeClass(classes.reading)
+      grid.$container.find(gS(classes.spinner)).remove()
+      grid.$container.hide().show(0)
     },
     success: function(response) {
       if (
@@ -170,10 +160,10 @@ Grid.prototype.read = function(event, data) {
         return console.warn('read response malformed', response)
       }
 
-      event.data.readRender(event, response.rows)
-      event.data.renderPagination(event, response)
-      event.data.storeReadModel(event, data)
-      event.data.rowsCurrent = response.rows
+      readRender(grid, response.rows)
+      renderPagination(grid, response)
+      storeReadModel(grid, data)
+      grid.rowsCurrent = response.rows
     },
     error: function(response) {
       return console.warn('problem with read request')
@@ -181,15 +171,10 @@ Grid.prototype.read = function(event, data) {
   })
 }
 
-Grid.prototype.renderPagination = function(event, response) {
-
-  if (typeof Math === 'undefined') {
-    return console.warn('Math object not defined')
-  }
-
+function renderPagination(grid, response) {
   var rowsTotal = parseInt(response.rowsTotal)
-  var pageCurrent = parseInt(event.data.getPageCurrent(event))
-  var rowsPerPage = event.data.rowsPerPage
+  var pageCurrent = parseInt(getPageCurrent(grid))
+  var rowsPerPage = grid.rowsPerPage
   var possiblePages
 
   // lowest will be 1
@@ -203,12 +188,12 @@ Grid.prototype.renderPagination = function(event, response) {
 
   // per page
   var optionsPerPage = []
-  for (var index = 0; index < event.data.options.perPageOptions.length; index++) {
-    optionsPerPage.push({key: event.data.options.perPageOptions[index], value: event.data.options.perPageOptions[index], keySelected: rowsPerPage == event.data.options.perPageOptions[index]})
+  for (var index = 0; index < grid.options.perPageOptions.length; index++) {
+    optionsPerPage.push({key: grid.options.perPageOptions[index], value: grid.options.perPageOptions[index], keySelected: rowsPerPage == grid.options.perPageOptions[index]})
   }
 
   // render pagination
-  event.data.$container.find(utils.gS(classes.pageContainer)).html(mustache.render(templatePagination, {
+  grid.$container.find(gS(classes.pageContainer)).html(mustache.render(templatePagination, {
       possiblePages: possiblePages,
       selectPages: {options: options, classNames: ['grid-pagination-select', classes.pageSelect]},
       selectPerPage: {options: optionsPerPage, classNames: ['grid-pagination-select', classes.perPageSelect]},
@@ -216,15 +201,15 @@ Grid.prototype.renderPagination = function(event, response) {
     }, {select: templateSelect}))
 }
 
-Grid.prototype.getPageCurrent = function(event) {
-  var pageCurrent = parseInt(event.data.$container.find(utils.gS(classes.pageSelect)).val())
+function getPageCurrent(grid) {
+  var pageCurrent = parseInt(grid.$container.find(gS(classes.pageSelect)).val())
   return pageCurrent > 0 ? pageCurrent : 1
 }
 
-Grid.prototype.readRender = function(event, rows) {
+function readRender(grid, rows) {
 
   // remove any existing rows
-  event.data.$container.find(utils.gS(classes.row)).remove()
+  grid.$container.find(gS(classes.row)).remove()
 
   // find out if any html models exist
   // replace the data with a blank space, or class
@@ -241,7 +226,7 @@ Grid.prototype.readRender = function(event, rows) {
       // change to new format html defaults to value
       rows[indexRow][indexCell] = {value: value, html: value}
 
-      var model = event.data.getModelByIndex(event, indexCell)
+      var model = getModelByIndex(grid, indexCell)
 
       // select box value
       if ('selectOptions' in model) {
@@ -261,43 +246,40 @@ Grid.prototype.readRender = function(event, rows) {
     }
   }
 
-  event.data.$container.find(utils.gS(classes.rowHeading)).after(mustache.render(templateRows, rows))
+  grid.$container.find(gS(classes.rowHeading)).after(mustache.render(templateRows, rows))
 
   if (rows.length) {
 
     // attach delete button
-    if ('delete' in event.data.options.url) {
-      var $rows = event.data.$container.find(utils.gS(classes.row))
+    if ('delete' in grid.options.url) {
+      var $rows = grid.$container.find(gS(classes.row))
       for (var index = $rows.length - 1; index >= 0; index--) {
         var $row = $($rows[index])
-        $row.find(utils.gS(classes.cell)).last().append(mustache.render(templateDeleteButton))
+        $row.find(gS(classes.cell)).last().append(mustache.render(templateDeleteButton))
       }
     }
   } else {
-    event.data.$container
-      .find(utils.gS(classes.table))
+    grid.$container
+      .find(gS(classes.table))
       .after(mustache.render(mustache.render(templateNoRowsPane)))
   }
 }
 
-Grid.prototype.storeInitialData = function() {
-
-  // extract primary key and store
-  for (var index = this.options.cols.length - 1; index >= 0; index--) {
-    if ('primaryKey' in this.options.cols[index]) {
-      this.primaryKey = this.options.cols[index].key
+// extract primary key and store
+function storeInitialData(grid) {
+  for (var index = grid.options.cols.length - 1; index >= 0; index--) {
+    if ('primaryKey' in grid.options.cols[index]) {
+      grid.primaryKey = grid.options.cols[index].key
     }
   }
 }
 
-Grid.prototype.deleteRow = function(event) {
+function deleteRow(grid, $target) {
   var data = {}
-  var $trigger = $(this)
-  event.data.selectRowByCell(event, $trigger.closest(utils.gS(classes.cell)))
-  data[event.data.primaryKey] = event.data.getSelectedRowPrimaryValue(event)
-
+  selectRowByCell(grid, $target.closest(gS(classes.cell)))
+  data[grid.primaryKey] = getSelectedRowPrimaryValue(grid)
   dialogue.create({
-    positionTo: $trigger,
+    positionTo: $target,
     className: 'dialogue-grid-delete',
     width: 200,
     title: 'Delete Row',
@@ -309,17 +291,17 @@ Grid.prototype.deleteRow = function(event) {
       'Delete': function() {
         $.ajax({
           type: 'get',
-          url: event.data.options.url.delete,
+          url: grid.options.url.delete,
           dataType: 'json',
           data: data,
           success: function(response) {
             if ('rowCount' in response && response.rowCount == 1) {
-              feedbackQueue.createMessage({message: 'Deleted row \'' + data[event.data.primaryKey] + '\'.', type: 'success'})
+              feedbackQueue.createMessage({message: 'Deleted row \'' + data[grid.primaryKey] + '\'.', type: 'success'})
             } else {
-              feedbackQueue.createMessage({message: 'Row \'' + data[event.data.primaryKey] + '\' already deleted.'})
+              feedbackQueue.createMessage({message: 'Row \'' + data[grid.primaryKey] + '\' already deleted.'})
             }
             dialogue.close()
-            event.data.buildReadModel(event)
+            buildReadModel(grid)
           },
           error: function(response) {
             feedbackQueue.createMessage({message: 'There was a problem while deleting the row.'})
@@ -330,106 +312,115 @@ Grid.prototype.deleteRow = function(event) {
   })
 }
 
-Grid.prototype.setEvents = function(event) {
+function setEvents(grid) {
 
-  // clicking the cell
-  event.data.$container.on(utils.gEvtNs('mouseup'), event.data, event.data.mouseDocument)
-
-  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonDelete), event.data, event.data.deleteRow)
-
-  // search input
-  event.data.$container.on(utils.gEvtNs('keyup'), utils.gS(classes.searchInput), event.data, function(event) {
-    event.data.$container.find(utils.gS(classes.pageSelect)).val(1)
-    event.data.keySearchInput(event)
+  grid.$container.on(gEvtNs('mouseup'), function(event) {
+    onMouseUpCell(grid, $(event.target))
   })
 
-  // keyup on a edit input
-  event.data.$container.on(utils.gEvtNs('keyup'), event.data, function(event) {
+  grid.$container.on(gEvtNs('click'), gS(classes.buttonDelete), function() {
+    deleteRow(grid, $(this))
+  })
 
-    // enter key and a cell is being edited
-    if (keyCode.enter == event.which && event.data.getSelectedCell(event)) {
-      event.data.cellDeselect(event, {persist: true})
+  grid.$container.on(gEvtNs('keyup'), gS(classes.searchInput), function(event) {
+    grid.$container.find(gS(classes.pageSelect)).val(1)
+    if (event.which == keyCode.enter) {
+      buildReadModel(grid)
+    }
+  })
+
+  grid.$container.on(gEvtNs('keyup'), function(event) {
+    if (keyCode.enter == event.which && getSelectedCell(grid)) {
+      cellDeselect(grid, {persist: true})
     } else if (keyCode.esc == event.which) {
-      event.data.cellDeselect(event, {revert: true})
+      cellDeselect(grid, {revert: true})
     }
   })
 
   // search select
-  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.searchSelect), event.data, function(event) {
-    event.data.$container.find(utils.gS(classes.pageSelect)).val(1)
-    event.data.buildReadModel(event)
+  grid.$container.on(gEvtNs('change'), gS(classes.searchSelect), function() {
+    grid.$container.find(gS(classes.pageSelect)).val(1)
+    buildReadModel(grid)
   })
 
   // search field clicking dont order heading
-  event.data.$container.on(utils.gEvtNs('mouseup'), utils.gS(classes.searchField), event.data, function(event) {
+  grid.$container.on(gEvtNs('mouseup'), gS(classes.searchField), function(event) {
     event.stopPropagation()
   })
 
   // order column
-  event.data.$container.on(utils.gEvtNs('mouseup'), utils.gS(classes.gridCellHeadingOrderable), event.data, event.data.mouseHeadingCell)
+  grid.$container.on(gEvtNs('mouseup'), gS(classes.gridCellHeadingOrderable), function() {
+    mouseHeadingCell(grid, $(this))
+  })
 
   // change page
-  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.pageSelect), event.data, event.data.buildReadModel)
+  grid.$container.on(gEvtNs('change'), gS(classes.pageSelect), function() {
+    buildReadModel(grid)
+  })
 
   // change per page
-  event.data.$container.on(utils.gEvtNs('change'), utils.gS(classes.perPageSelect), event.data, function() {
-    event.data.$container.find(utils.gS(classes.pageSelect)).val(1)
-    event.data.buildReadModel(event)
+  grid.$container.on(gEvtNs('change'), gS(classes.perPageSelect), function() {
+    grid.$container.find(gS(classes.pageSelect)).val(1)
+    buildReadModel(grid)
   })
 
   // remove all filtering
   // could make a render from scratch function?
-  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonRemoveFilters), event.data, function() {
-    event.data.options = event.data.optionsOriginal
-    event.data.storeReadModel(event, event.data.getReadModelDataDefaults(event))
-    event.data.appendSelectOptionsKeyValue(event)
-    event.data.$container.html(mustache.render(templateGrid, event.data.options))
-    event.data.buildReadModel(event)
+  grid.$container.on(gEvtNs('click'), gS(classes.buttonRemoveFilters), function() {
+    resetAll(grid)
   })
 
-  event.data.$container.on(utils.gEvtNs('click'), utils.gS(classes.buttonCreate), event.data, function(event) {
-
-    dialogueCreate.create({
-      mask: true,
-      className: 'dialogue-grid-create',
-      width: 300,
-      title: 'Create',
-      html: event.data.getCreateFormHtml(event),
-      actions: {
-        'Cancel': function() {
-          this.close()
-        },
-        'Create': function() {
-          event.data.createRow(event)
-        }
-      }
-    })
+  grid.$container.on(gEvtNs('click'), gS(classes.buttonCreate), grid, function(event) {
+    openCreateRow(grid)
   })
 }
 
-Grid.prototype.getCreateFormHtml = function(event) {
-  var models = event.data.options.cols
+function openCreateRow(grid) {
+  dialogueCreate.create({
+    mask: true,
+    className: 'dialogue-grid-create',
+    width: 300,
+    title: 'Create',
+    html: getCreateFormHtml(grid),
+    actions: {
+      'Cancel': function() {
+        this.close()
+      },
+      'Create': function() {
+        createRow(grid)
+      }
+    }
+  })
+}
+
+function resetAll(grid) {
+  grid.options = grid.optionsPristine
+  storeReadModel(grid, getReadModelDataDefaults(grid))
+  createSelectOptionsKeyValue(grid)
+  grid.$container.html(mustache.render(templateGrid, grid.options))
+  buildReadModel(grid)
+}
+
+function getCreateFormHtml(grid) {
+  var models = grid.options.cols
   var model
   var data = []
   for (var index = models.length - 1; index >= 0; index--) {
     model = models[index]
-
-    model.inputType = event.data.getInputTypeFromModel(model)
+    model.inputType = getInputTypeFromModel(model)
 
     // remove primary key, at end because errors
     // must have a type otherwise cant have an input
-    if (model.key != event.data.primaryKey && model.inputType) {
+    if (model.key != grid.primaryKey && model.inputType) {
       data.push(model)
     }
   }
-
   return mustache.render(templateFormCreate, data.reverse())
 }
 
-Grid.prototype.mouseHeadingCell = function(event) {
-  var $cell = $(this)
+function mouseHeadingCell(grid, $target) {
   var dataKey = 'order'
-  var order = $cell.data(dataKey)
+  var order = $target.data(dataKey)
   var orderNew
 
   if (!order) {
@@ -440,30 +431,23 @@ Grid.prototype.mouseHeadingCell = function(event) {
     orderNew = ''
   }
 
-  $cell
+  $target
     .removeClass('grid-heading-is-order-asc')
     .removeClass('grid-heading-is-order-desc')
     .data(dataKey, orderNew)
 
   if (orderNew) {
-    $cell.addClass('grid-heading-is-order-' + orderNew)
+    $target.addClass('grid-heading-is-order-' + orderNew)
   }
 
-  event.data.buildReadModel(event)
+  buildReadModel(grid)
 }
 
-Grid.prototype.keySearchInput = function(event) {
-  var $searchInput = $(this)
-  if (event.which == keyCode.enter) {
-    event.data.buildReadModel(event)
-  }
-}
-
-Grid.prototype.getReadModelDataDefaults = function(event) {
+function getReadModelDataDefaults(grid) {
   return {
     search: {},
     order: {},
-    rowsPerPage: event.data.rowsPerPage,
+    rowsPerPage: grid.rowsPerPage,
     pageCurrent: 1
   }
 }
@@ -472,28 +456,28 @@ Grid.prototype.getReadModelDataDefaults = function(event) {
 // searches
 // ordering
 // pagination
-Grid.prototype.buildReadModel = function(event) {
-  var data = event.data.getReadModelDataDefaults(event)
+function buildReadModel(grid) {
+  var data = getReadModelDataDefaults(grid)
 
   // page
-  $pageSelect = event.data.$container.find(utils.gS(classes.pageSelect))
+  $pageSelect = grid.$container.find(gS(classes.pageSelect))
   if ($pageSelect.length) {
     data.pageCurrent = $pageSelect.val()
   }
 
   // per page
-  $perPageSelect = event.data.$container.find(utils.gS(classes.perPageSelect))
+  $perPageSelect = grid.$container.find(gS(classes.perPageSelect))
   if ($perPageSelect.length) {
     data.rowsPerPage = $perPageSelect.val()
-    event.data.rowsPerPage = $perPageSelect.val() // store in memory
+    grid.rowsPerPage = $perPageSelect.val() // store in memory
   }
 
   // search
-  var $searchInputs = event.data.$container.find(utils.gS(classes.searchField))
+  var $searchInputs = grid.$container.find(gS(classes.searchField))
   if ($searchInputs.length) {
     for (var index = $searchInputs.length - 1; index >= 0; index--) {
       var $searchInput = $($searchInputs[index])
-      var key = $searchInput.closest(utils.gS(classes.cellHeading)).data('key')
+      var key = $searchInput.closest(gS(classes.cellHeading)).data('key')
       var value = $searchInput.val()
       if (value !== ' ' && value) { // empty search value, better way?
         data.search[key] = value
@@ -502,7 +486,7 @@ Grid.prototype.buildReadModel = function(event) {
   }
 
   // ordering
-  var $headingCells = event.data.$container.find(utils.gS(classes.cellHeading))
+  var $headingCells = grid.$container.find(gS(classes.cellHeading))
   for (var index = $headingCells.length - 1; index >= 0; index--) {
     $headingCell = $($headingCells[index])
     if ($headingCell.data('order')) {
@@ -512,24 +496,25 @@ Grid.prototype.buildReadModel = function(event) {
     }
   }
 
-  event.data.markContainerFiltering(event, data)
-  event.data.read(event, data)
+  read(grid, data)
 }
 
-// flag container as being filtered
-Grid.prototype.markContainerFiltering = function(event, readModel) {
-  event.data.$container.removeClass('grid-is-filtering')
-  if (('search' in readModel && !$.isEmptyObject(readModel.search)) || ('order' in readModel && !$.isEmptyObject(readModel.order))) {
-    event.data.$container.addClass('grid-is-filtering')
+function markContainerFiltering(grid, data) {
+  grid.$container.removeClass('grid-is-filtering')
+  if (isFilterActive()) {
+    grid.$container.addClass('grid-is-filtering')
   }
 }
 
-Grid.prototype.mouseDocument = function(event) {
-  var $target = $(event.target)
+function isFilterActive(grid, data) {
+  return ('search' in data && !$.isEmptyObject(data.search)) || ('order' in data && !$.isEmptyObject(data.order))
+}
+
+function onMouseUpCell(grid, $target) {
 
   // no target
   if (!$target.length) {
-    return event.data.cellDeselect(event)
+    return cellDeselect(grid)
   }
 
   // is cell and selected
@@ -540,54 +525,42 @@ Grid.prototype.mouseDocument = function(event) {
   // is cell and not selected
   // deselect then select
   if ($target.hasClass(classes.cell)) {
-    event.data.cellDeselect(event, {persist: true})
-    event.data.cellSelect(event, $target)
+    cellDeselect(grid, {persist: true})
+    cellSelect(grid, $target)
   }
 }
 
-Grid.prototype.getModelByIndex = function(event, index) {
-  var thKey = event.data.$container.find(utils.gS(classes.cellHeading)).eq(index).data('key')
+function getModelByIndex(grid, index) {
+  var thKey = grid.$container.find(gS(classes.cellHeading)).eq(index).data('key')
   var model
-  for (var index = event.data.options.cols.length - 1; index >= 0; index--) {
-    model = event.data.options.cols[index]
+  for (var index = grid.options.cols.length - 1; index >= 0; index--) {
+    model = grid.options.cols[index]
     if (model.key == thKey) {
       return model
     }
   }
 }
 
-Grid.prototype.getModelByKey = function(event, key) {
-  var model
-  for (var index = event.data.options.cols.length - 1; index >= 0; index--) {
-    model = event.data.options.cols[index]
-    if (model.key == key) {
-      return model
-    }
-  }
-}
-
 // deselect row by removing classes
-Grid.prototype.rowDeselect = function(event) {
-  var $selectedRow = event.data.getSelectedRow(event)
-
+function rowDeselect(grid) {
+  var $selectedRow = getSelectedRow(grid)
   if (!$selectedRow.length) {
     return
   }
-
   $selectedRow.removeClass(classes.selected)
 }
 
-Grid.prototype.getSelectedRow = function(event) {
-  return event.data.$container.find(utils.gS(classes.row) + utils.gS(classes.selected))
+function getSelectedRow(grid) {
+  return grid.$container.find(gS(classes.row) + gS(classes.selected))
 }
 
-Grid.prototype.getSelectedCell = function(event) {
-  return event.data.$container.find(utils.gS(classes.cell) + utils.gS(classes.selected))
+function getSelectedCell(grid) {
+  return grid.$container.find(gS(classes.cell) + gS(classes.selected))
 }
 
 // deselect cell with options relating to persistence
-Grid.prototype.cellDeselect = function(event, options) {
-  var $selectedRow = event.data.getSelectedRow(event)
+function cellDeselect(grid, options) {
+  var $selectedRow = getSelectedRow(grid)
   var wasChanged
   var defaults = {
     persist: false,
@@ -599,28 +572,28 @@ Grid.prototype.cellDeselect = function(event, options) {
     return
   }
 
-  var primaryKeyValue = event.data.getSelectedRowPrimaryValue(event)
-  var $selectedCell = event.data.getSelectedCell(event)
+  var primaryKeyValue = getSelectedRowPrimaryValue(grid)
+  var $selectedCell = getSelectedCell(grid)
 
   if (!$selectedCell.length) {
     return
   }
 
-  var newValue = event.data.getSelectedCellInputValue(event)
-  var model = event.data.getModelByIndex(event, $selectedCell.index())
+  var newValue = getSelectedCellInputValue(grid)
+  var model = getModelByIndex(grid, $selectedCell.index())
 
   // deselect visibly
-  event.data.rowDeselect(event)
+  rowDeselect(grid)
   $selectedCell.removeClass(classes.selected)
 
   // not editable
-  if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
+  if (!('update' in grid.options.url) || ('edit' in model && !model.edit)) {
     return
   }
 
-  var $selectedCellInput = $selectedCell.find(utils.gS(classes.input))
+  var $selectedCellInput = $selectedCell.find(gS(classes.input))
   var cellHtml
-  var persistedValue = event.data.getRowCellValue(event, $selectedCell)
+  var persistedValue = getRowCellValue(grid, $selectedCell)
 
   if (newValue == persistedValue) {
     wasChanged = false
@@ -629,7 +602,7 @@ Grid.prototype.cellDeselect = function(event, options) {
   }
 
   // get selected option html
-  var type = event.data.getInputTypeFromModel(model)
+  var type = getInputTypeFromModel(model)
 
   // select needs to get the display name from the key
   if (type == 'select') {
@@ -655,17 +628,16 @@ Grid.prototype.cellDeselect = function(event, options) {
 
     // perform persist update
     data = {}
-    data[event.data.primaryKey] = primaryKeyValue
+    data[grid.primaryKey] = primaryKeyValue
     data['name'] = model.key
     data['value'] = newValue
 
-    event.data.update(event, data)
+    update(grid, data)
   }
 }
 
-Grid.prototype.getSelectedCellInputValue = function(event) {
-  var $selectedCellInput = event.data.getSelectedCell(event).find(utils.gS(classes.input))
-
+function getSelectedCellInputValue(grid) {
+  var $selectedCellInput = getSelectedCell(grid).find(gS(classes.input))
   if ($selectedCellInput.length) {
     return $selectedCellInput.val()
   } else if (typeof tinymce.activeEditor !== 'undefined' && tinymce.activeEditor) { // html
@@ -674,16 +646,16 @@ Grid.prototype.getSelectedCellInputValue = function(event) {
 }
 
 // persist a row cell
-Grid.prototype.update = function(event, data) {
+function update(grid, data) {
   $.ajax({
     type: 'post',
-    url: event.data.options.url.update,
+    url: grid.options.url.update,
     dataType: 'json',
     data: data,
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Updated row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'})
-        event.data.buildReadModel(event)
+        buildReadModel(grid)
         dialogueCellWysi.close()
       }
     },
@@ -693,24 +665,22 @@ Grid.prototype.update = function(event, data) {
   })
 }
 
-Grid.prototype.createRow = function(event) {
+function createRow(grid) {
   var data = {columns: {}}
-  var $formCreateCells = $(utils.gS(classes.formCreateCell))
-  for (var index = $formCreateCells.length - 1; index >= 0; index--) {
-    var $formCreateCell = $($formCreateCells[index])
+  var $formCreateCells = $(gS(classes.formCreateCell))
+  $formCreateCells.forEach(function($formCreateCell) {
     data.columns[$formCreateCell.prop('name')] = $formCreateCell.val()
-  }
-
+  })
   $.ajax({
     type: 'get',
-    url: event.data.options.url.create,
+    url: grid.options.url.create,
     dataType: 'json',
     data: data,
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Created row.', type: 'success'})
         dialogueCreate.close()
-        event.data.buildReadModel(event)
+        buildReadModel(grid)
       } else {
         feedbackQueue.createMessage({message: 'Row was not created.'})
       }
@@ -722,17 +692,17 @@ Grid.prototype.createRow = function(event) {
 }
 
 // returns the selected row primary value
-Grid.prototype.getSelectedRowPrimaryValue = function(event) {
-  var $selectedRow = event.data.getSelectedRow(event)
-  var $selectedCell = event.data.getSelectedCell(event)
-  var $primaryHeadingCell = event.data.$container.find(utils.gS(classes.cellHeading) + '[data-key="' + event.data.primaryKey + '"]')
-  var $primaryCell = $selectedRow.find(utils.gS(classes.cell)).eq($primaryHeadingCell.index())
+function getSelectedRowPrimaryValue(grid) {
+  var $selectedRow = getSelectedRow(grid)
+  var $selectedCell = getSelectedCell(grid)
+  var $primaryHeadingCell = grid.$container.find(gS(classes.cellHeading) + '[data-key="' + grid.primaryKey + '"]')
+  var $primaryCell = $selectedRow.find(gS(classes.cell)).eq($primaryHeadingCell.index())
 
-  return event.data.getRowCellValue(event, $primaryCell)
+  return getRowCellValue(grid, $primaryCell)
 }
 
 // using model get the input type
-Grid.prototype.getInputTypeFromModel = function(model) {
+function getInputTypeFromModel(model) {
   if ('selectOptions' in model) {
     return 'select'
   } else if ('type' in model) {
@@ -742,41 +712,41 @@ Grid.prototype.getInputTypeFromModel = function(model) {
   }
 }
 
-Grid.prototype.selectRowByCell = function(event, $cell) {
+function selectRowByCell(grid, $cell) {
 
   // deselect all rows
-  event.data.$container
-    .find(utils.gS(classes.row))
+  grid.$container
+    .find(gS(classes.row))
     .removeClass(classes.selected)
 
   // select row closest to cell
   $cell
-    .closest(utils.gS(classes.row))
+    .closest(gS(classes.row))
     .addClass(classes.selected)
 }
 
 // switch the data out with an input / select
-Grid.prototype.cellSelect = function(event, $cell) {
+function cellSelect(grid, $cell) {
   var template
   var data = []
-  var model = event.data.getModelByIndex(event, $cell.index())
-  var type = event.data.getInputTypeFromModel(model)
-  var persistedValue = event.data.getRowCellValue(event, $cell)
+  var model = getModelByIndex(grid, $cell.index())
+  var type = getInputTypeFromModel(model)
+  var persistedValue = getRowCellValue(grid, $cell)
   
-  event.data.selectRowByCell(event, $cell)
+  selectRowByCell(grid, $cell)
   
   var passBack = {
-    primaryKeyValue: event.data.getSelectedRowPrimaryValue(event),
+    primaryKeyValue: getSelectedRowPrimaryValue(grid),
     cellValue: persistedValue,
     cellType: type,
     model: model
   }
 
-  event.data.options.onSelectCell.call(passBack)
-  event.data.options.onSelectRow.call(passBack)
+  grid.options.onSelectCell.call(passBack)
+  grid.options.onSelectRow.call(passBack)
 
   // not editable
-  if (!('update' in event.data.options.url) || ('edit' in model && !model.edit)) {
+  if (!('update' in grid.options.url) || ('edit' in model && !model.edit)) {
     return
   }
 
@@ -790,7 +760,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
       width: 500,
       html: mustache.render('<textarea class="js-grid-dialogue-wysi-textarea">{{html}}</textarea>', {html: persistedValue}),
       onClose: function() {
-        event.data.cellDeselect(event, {revert: true})
+        cellDeselect(grid, {revert: true})
         if (typeof tinymce.activeEditor !== 'undefined') {
           tinymce.activeEditor.remove()
         }
@@ -800,7 +770,7 @@ Grid.prototype.cellSelect = function(event, $cell) {
       },
       actions: {
         Save: function() {
-          event.data.cellDeselect(event, {persist: true})
+          cellDeselect(grid, {persist: true})
           dialogueCellWysi.close()
         }
       }
@@ -819,29 +789,42 @@ Grid.prototype.cellSelect = function(event, $cell) {
 
   if (type != 'html') {
     $cell.html(mustache.render(template, data))
-    $cell.find(utils.gS(classes.input)).val(persistedValue).focus().select()
+    $cell.find(gS(classes.input)).val(persistedValue).focus().select()
   }
 }
 
-Grid.prototype.getRowCellValue = function(event, $cell) {
-  var rowPos = $cell.parent(utils.gS(classes.row)).index()
+function getRowCellValue(grid, $cell) {
+  var rowPos = $cell.parent(gS(classes.row)).index()
   var cellPos = $cell.index()
-  return event.data.rowsCurrent[rowPos - 1][cellPos]['value']
+  return grid.rowsCurrent[rowPos - 1][cellPos]['value']
 }
 
-Grid.prototype.getStorageKey = function(event) {
-  return 'mwyatt-grid-' + event.data.options.id
+function getStorageKey(grid) {
+  return 'mwyatt-grid-' + grid.options.id
 }
 
-// return the last performed read model
-// defaults to empty object
-Grid.prototype.getStoredReadModel = function(event) {
-  var readModel = JSON.parse(localStorage.getItem(event.data.getStorageKey(event)))
+function getStoredReadModel(grid) {
+  var readModel = JSON.parse(localStorage.getItem(getStorageKey(grid)))
   return readModel ? readModel : {}
 }
 
-Grid.prototype.storeReadModel = function(event, model) {
-  localStorage.setItem(event.data.getStorageKey(event), JSON.stringify(model))
+function storeReadModel(grid, model) {
+  localStorage.setItem(getStorageKey(grid), JSON.stringify(model))
+}
+
+function checkBrowserSupport() {
+  if (typeof console === 'undefined') {
+    return alert('console is not defined')
+  }
+  if (typeof Math === 'undefined') {
+    console.warn('Math object not defined', 'function renderPagination will suffer')
+  }
+  if (typeof localStorage === 'undefined') {
+    console.warn('localStorage is not defined')
+  }
+  if (typeof JSON === 'undefined') {
+    console.warn('JSON is not defined')
+  }
 }
 
 module.exports = Grid

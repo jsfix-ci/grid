@@ -8,20 +8,10 @@ gridPrimary.create({
   id: 'primary',
   perPageOptions: [10, 25, 50, 100, 200],
   url: {
-    // create: 'request/grid-primary/create.php',
     read: 'request/grid-primary/read.php'
-    // update: 'request/grid-primary/update.php',
-    // delete: 'request/grid-primary/delete.php'
   },
-  onSelectCell: function(config) {
-    // if (model.key == 'id') {
-    //   console.log('id selected')
-    // }
-    // console.log('onSelectCell', this, model, type)
-  },
-  onSelectRow: function(config) {
-    // gridSecondary.doSomething
-  },
+  onSelectCell: function(config) {},
+  onSelectRow: function(config) {},
   cols: [
     {
       width: 5,
