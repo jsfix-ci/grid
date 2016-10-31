@@ -36,10 +36,11 @@
 }
 
 .grid-cell-heading {
-  background-color: #eeeeee;
+  background-color: var(--color-primary-0);
   padding: var(--cell-spacing) 0 0;
   border: none;
   font-size: 12px;
+  color: #fff;
 }
 
 .is-order-asc {
@@ -50,14 +51,20 @@
   background: blue;
 }
 
+.grid-search-input,
+.grid-cell,
 .grid-row {
-  transition-property: opacity;
-  transition-duration: 200ms;
-  transition-timing-function: ease;
+  transition-property: background-color;
+  transition-duration: 100ms;
+  transition-timing-function: ease-out;
 }
 
 .grid-row:hover {
-  background-color: #eeeeee;
+  background-color: color(var(--color-primary-0) tint(90%));
+}
+
+.grid-cell:hover {
+  background-color: color(var(--color-primary-0) tint(85%));
 }
 
 body {
@@ -66,6 +73,9 @@ body {
 
 .grid-container {
   margin: 2em 0;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      overflow: hidden;
 }
 
 .grid-form-create-row {
@@ -200,26 +210,32 @@ body {
 
 .grid-search-input {
   width: 100%;
+  font-weight: normal;
   font-size: 1em;
   box-sizing: border-box;
   appearance: none;
   color: var(--body-color);
   font-family: var(--font-family);
   border: none;
-  padding: 2px 4px;
+  padding: 4px;
   margin: 0;
   border-radius: var(--border-radius);
+}
+
+.grid-search-input:focus {
+  background-color: color(var(--color-primary-0) tint(90%));
 }
 
 .grid-search-select {
   font-size: 1em;
   box-sizing: border-box;
-  color: var(--body-color);
+  color: #fff;
   font-family: var(--font-family);
   border: none;
   padding: 1px 0;
   margin: 0;
   width: 100%;
+  background-color: color(var(--color-primary-0) tint(0%));
   border-radius: var(--border-radius);
 }
 

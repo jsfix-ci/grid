@@ -30,14 +30,14 @@ var Grid = function() {
 }
 
 Grid.prototype.create = function(options) {
-  this.options = $.extend(createDefaults, options)
-  this.optionsPristine = $.extend(true, {}, this.options) // true = deep copy
+  this.options = $.extend(true, {}, options)
+  this.optionsPristine = $.extend(true, {}, options) // true = deep copy
   this.rowsPerPage = getRowsPerPage(this)
   optionsValidate(this.options)
   addPrimaryKeyToGrid(this)
   setupContainer(this)
-  setupRenderAreaAndRead(this)
   setEvents(this)
+  setupRenderAreaAndRead(this)
 }
 
 function setupContainer(grid) {
@@ -50,9 +50,8 @@ function setupContainer(grid) {
 
 function setupRenderAreaAndRead(grid) {
   addSelectOptionsKeyValueToCols(grid)
-  buildReadModel(grid)
   grid.$container.html(mustache.render(templateGrid, grid.options))
-  read(grid, getFirstReadModel(grid))
+  buildReadModel(grid)
 }
 
 function optionsValidate(options) {
@@ -267,7 +266,7 @@ function deleteRow(grid, $target) {
   selectRowByCell(grid, $target.closest(gS(classes.cell)))
   data[grid.primaryKey] = getSelectedRowPrimaryValue(grid)
   dialogue.create({
-    positionTo: $target,
+    positionTo: $target[0],
     className: 'dialogue-grid-delete',
     width: 200,
     title: 'Delete Row',
