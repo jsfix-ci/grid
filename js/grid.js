@@ -875,7 +875,7 @@ function cellSelect(grid, $cell) {
   grid.options.onSelectRow.call(passBack)
 
   // not editable
-  if (!('update' in grid.options.url) || ('edit' in model && !model.edit)) {
+  if (!('update' in grid.options.url) || !('edit' in model) || !model.edit) {
     return
   }
 

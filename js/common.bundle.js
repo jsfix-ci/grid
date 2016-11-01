@@ -20,7 +20,6 @@ gridPrimary.create({
       primaryKey: true,
       search: true,
       order: true,
-      edit: false,
       readTemplate: '<a href="#" class="link">{{.}}</a>'
     },
     {
@@ -29,13 +28,11 @@ gridPrimary.create({
       key: 'sku',
       name: 'SKU',
       order: true,
-      edit: false,
       type: 'text',
       required: true
     },
     {
       width: 25,
-      edit: false,
       order: true,
       type: 'text',
       key: 'name',
@@ -47,14 +44,12 @@ gridPrimary.create({
       order: true,
       type: 'number',
       key: 'stock',
-      name: 'Stock',
-      edit: false
+      name: 'Stock'
     },
     {
       width: 10,
       order: true,
       search: true,
-      edit: false,
       key: 'status',
       name: 'Status',
       selectOptions: {
@@ -66,7 +61,6 @@ gridPrimary.create({
     },
     {
       width: 10,
-      edit: false,
       key: 'supplier',
       name: 'Supplier',
       search: true,
@@ -80,7 +74,6 @@ gridPrimary.create({
       key: 'requiresCount',
       name: 'Rq Count',
       search: true,
-      edit: false,
       selectOptions: {
         Yes: 'Yes',
         No: 'No'
@@ -89,8 +82,7 @@ gridPrimary.create({
     {
       width: 10,
       key: 'print',
-      name: 'Print',
-      edit: false
+      name: 'Print'
     }
   ]
 })
@@ -110,7 +102,6 @@ gridSecondary.create({
     {
       key: 'id',
       name: 'ID',
-      edit: false,
       primaryKey: true
     },
     {
