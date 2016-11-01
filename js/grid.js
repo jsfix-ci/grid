@@ -4,8 +4,6 @@ var mustache = require('mustache')
 var dialogueFactory = require('mwyatt-dialogue')
 var feedbackQueueFactory = require('mwyatt-feedback-queue')
 var classes = require('./classes')
-var tinymceConfig = require('./tinymceConfig')
-var createDefaults = require('./createDefaults')
 
 var templateNoRowsPane = require('./noRowsPane.mustache')
 var templateDeleteButton = require('./deleteButton.mustache')
@@ -23,6 +21,27 @@ var dialogueCreate = new dialogueFactory()
 var dialogueCellWysi = new dialogueFactory()
 var dialogue = new dialogueFactory()
 var feedbackQueue = new feedbackQueueFactory()
+var tinymceConfig = {
+  selector: '.js-grid-dialogue-wysi-textarea',
+  height: 400,
+  relative_urls: true,
+  convert_urls: false,
+  plugins: [
+    'advlist autolink lists link image charmap print preview anchor',
+    'searchreplace visualblocks code fullscreen',
+    'insertdatetime media table contextmenu paste code'
+  ],
+  toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+  content_css: [
+    '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
+    '//www.tinymce.com/css/codepen.min.css'
+  ],
+  setup: function(editor) {
+    editor.on('init', function() {
+      dialogueCellWysi.reposition()
+    })
+  }
+}
 
 var Grid = function() {
   this.rowsCurrent = []
@@ -30,8 +49,10 @@ var Grid = function() {
 }
 
 Grid.prototype.create = function(options) {
-  this.options = $.extend(true, {}, options)
-  this.optionsPristine = $.extend(true, {}, options) // true = deep copy
+  var optionsDefaults = getOptionsDefaults()
+  var optionsDefaultsPristine = getOptionsDefaults()
+  this.options = $.extend(true, optionsDefaults, options)
+  this.optionsPristine = $.extend(true, optionsDefaultsPristine, options)
   this.rowsPerPage = getRowsPerPage(this)
   optionsValidate(this.options)
   addPrimaryKeyToGrid(this)
@@ -49,9 +70,9 @@ function setupContainer(grid) {
 }
 
 function setupRenderAreaAndRead(grid) {
-  addSelectOptionsKeyValueToCols(grid)
+  modifyOptionsBeforeRender(grid)
   grid.$container.html(mustache.render(templateGrid, grid.options))
-  buildReadModel(grid)
+  read(grid)
 }
 
 function optionsValidate(options) {
@@ -67,11 +88,8 @@ function optionsValidate(options) {
 }
 
 function getRowsPerPage(grid) {
-  var storedModel = getStoredReadModel(grid)
-  if ('rowsPerPage' in storedModel) {
-    return storedModel.rowsPerPage
-  }
-  return grid.options.perPageOptions[0]
+  var storedModel = getReadModel(grid)
+  return storedModel.rowsPerPage
 }
 
 // obtains css selector version of a class name
@@ -88,7 +106,7 @@ function getContainerSelector(id) {
   return 'js-grid-' + id + '-container';
 }
 
-function getFirstReadModel(grid) {
+function getReadModel(grid) {
   var storedModel = getStoredReadModel(grid)
   if (!$.isEmptyObject(storedModel)) {
     return storedModel
@@ -96,23 +114,16 @@ function getFirstReadModel(grid) {
   return getReadModelDataDefaults(grid)
 }
 
-// this structure is needed so that you can loop as an array
-// factors in stored model to render selected items correctly
-function addSelectOptionsKeyValueToCols(grid) {
-  var storedModel = getStoredReadModel(grid)
+// creates within col: selectOptionsKeyValue and searchDefaultValue
+function modifyOptionsBeforeRender(grid) {
+  var readModel = getReadModel(grid)
   grid.options.cols.forEach(function(col, index) {
-    if ('selectOptions' in col) {
+    if ('selectOptions' in col && !('selectOptionsKeyValue' in col)) {
       col.selectOptionsKeyValue = []
       for (var key in col.selectOptions) {
         var value = col.selectOptions[key]
-        var storedModelValue
-        var selected
-        if (typeof storedModel != 'undefined') {
-          if (typeof storedModel.search != 'undefined') {
-            storedModelValue = col.selectOptions[storedModel.search[col.key]]
-          }
-          selected = 'search' in storedModel && col.key in storedModel.search && storedModelValue == value
-        }
+        var storedModelValue = col.selectOptions[readModel.search[col.key]]
+        var selected = col.key in readModel.search && storedModelValue == value
         col.selectOptionsKeyValue.push({
           selected: selected,
           key: key,
@@ -121,17 +132,21 @@ function addSelectOptionsKeyValueToCols(grid) {
       }
     }
     if ('search' in col && col.search) {
-      if ('search' in storedModel && col.key in storedModel.search) {
-        col.searchDefaultValue = storedModel.search[col.key]
+      if (col.key in readModel.search) {
+        col.searchDefaultValue = readModel.search[col.key]
+      }
+    }
+    if ('order' in col && col.order) {
+      if (col.key in readModel.order) {
+        col.orderDefaultValue = readModel.order[col.key]
       }
     }
     grid.options.cols[index] = col
   })
 }
 
-function read(grid, data) {
-  var storedModel = getStoredReadModel(grid)
-  markContainerFiltering(grid, storedModel)
+function read(grid) {
+  var data = getAjaxReadData(grid)
 
   // clear out no results pane
   grid.$container.find(gS(classes.noResults)).remove()
@@ -151,6 +166,7 @@ function read(grid, data) {
       grid.$container.removeClass(classes.reading)
       grid.$container.find(gS(classes.spinner)).remove()
       grid.$container.hide().show(0)
+      markContainerFiltering(grid)
     },
     success: function(response) {
       if (
@@ -161,8 +177,8 @@ function read(grid, data) {
         return console.warn('read response malformed', response)
       }
       readRender(grid, response.rows)
-      renderPagination(grid, response)
       storeReadModel(grid, data)
+      renderPagination(grid, response)
       grid.rowsCurrent = response.rows
     },
     error: function(response) {
@@ -172,9 +188,10 @@ function read(grid, data) {
 }
 
 function renderPagination(grid, response) {
+  var readModel = getReadModel(grid)
   var rowsTotal = parseInt(response.rowsTotal)
-  var pageCurrent = parseInt(getPageCurrent(grid))
-  var rowsPerPage = grid.rowsPerPage
+  var pageCurrent = readModel.pageCurrent
+  var rowsPerPage = readModel.rowsPerPage
   var possiblePages
 
   // lowest will be 1
@@ -199,11 +216,6 @@ function renderPagination(grid, response) {
       selectPerPage: {options: optionsPerPage, classNames: ['form-select', 'grid-pagination-select', classes.perPageSelect]},
       rowsTotal: rowsTotal
     }, {select: templateSelect}))
-}
-
-function getPageCurrent(grid) {
-  var pageCurrent = parseInt(grid.$container.find(gS(classes.pageSelect)).val())
-  return pageCurrent > 0 ? pageCurrent : 1
 }
 
 // takes all rows from read response and creates nice object
@@ -240,7 +252,7 @@ function readRender(grid, rows) {
   grid.$container.find(gS(classes.row)).remove()
   grid.$container.find(gS(classes.rowHeading)).after(mustache.render(templateRows, rowsObject))
   if (rows.length) {
-    if ('delete' in grid.options.url) {
+    if (grid.options.url.delete) {
       var $rows = grid.$container.find(gS(classes.row))
       for (var i = $rows.length - 1; i >= 0; i--) {
         var $row = $($rows[i])
@@ -288,7 +300,7 @@ function deleteRow(grid, $target) {
               feedbackQueue.createMessage({message: 'Row \'' + data[grid.primaryKey] + '\' already deleted.'})
             }
             dialogue.close()
-            buildReadModel(grid)
+            read(grid)
           },
           error: function(response) {
             feedbackQueue.createMessage({message: 'There was a problem while deleting the row.'})
@@ -312,7 +324,7 @@ function setEvents(grid) {
   grid.$container.on(gEvtNs('keyup'), gS(classes.searchInput), function(event) {
     grid.$container.find(gS(classes.pageSelect)).val(1)
     if (event.which == keyCode.enter) {
-      buildReadModel(grid)
+      read(grid)
     }
   })
 
@@ -327,7 +339,7 @@ function setEvents(grid) {
   // search select
   grid.$container.on(gEvtNs('change'), gS(classes.searchSelect), function() {
     grid.$container.find(gS(classes.pageSelect)).val(1)
-    buildReadModel(grid)
+    read(grid)
   })
 
   // search field clicking dont order heading
@@ -342,13 +354,13 @@ function setEvents(grid) {
 
   // change page
   grid.$container.on(gEvtNs('change'), gS(classes.pageSelect), function() {
-    buildReadModel(grid)
+    read(grid)
   })
 
   // change per page
   grid.$container.on(gEvtNs('change'), gS(classes.perPageSelect), function() {
     grid.$container.find(gS(classes.pageSelect)).val(1)
-    buildReadModel(grid)
+    read(grid)
   })
 
   // remove all filtering
@@ -382,7 +394,6 @@ function openCreateRow(grid) {
 
 function resetAll(grid) {
   grid.options = grid.optionsPristine
-  addSelectOptionsKeyValueToCols(grid)
   storeReadModel(grid, getReadModelDataDefaults(grid))
   setupRenderAreaAndRead(grid)
 }
@@ -426,14 +437,41 @@ function mouseHeadingCell(grid, $target) {
     $target.addClass('grid-heading-is-order-' + orderNew)
   }
 
-  buildReadModel(grid)
+  read(grid)
+}
+
+function getOptionsDefaults(grid) {
+  return {
+    id: '', // string to give this grid a unique identity
+    perPageOptions: [10, 25, 50, 100, 200],
+    url: {
+      create: '',
+      read: '',
+      update: '',
+      delete: ''
+    },
+    cols: [
+      // {
+      //   width: 5,
+      //   key: 'id',
+      //   name: 'ID',
+      //   primaryKey: true,
+      //   search: true,
+      //   order: true,
+      //   edit: false,
+      //   readTemplate: '<a href="#" class="link">{{.}}</a>'
+      // }
+    ],
+    onSelectCell: function() {},
+    onSelectRow: function() {}
+  }
 }
 
 function getReadModelDataDefaults(grid) {
   return {
     search: {},
     order: {},
-    rowsPerPage: grid.rowsPerPage,
+    rowsPerPage: grid.options.perPageOptions[0],
     pageCurrent: 1
   }
 }
@@ -442,8 +480,8 @@ function getReadModelDataDefaults(grid) {
 // searches
 // ordering
 // pagination
-function buildReadModel(grid) {
-  var data = getReadModelDataDefaults(grid)
+function getAjaxReadData(grid) {
+  var data = getReadModel(grid)
 
   // page
   $pageSelect = grid.$container.find(gS(classes.pageSelect))
@@ -481,18 +519,20 @@ function buildReadModel(grid) {
       data.order[key] = value
     }
   }
-  read(grid, data)
+
+  return data
 }
 
-function markContainerFiltering(grid, storedModel) {
+function markContainerFiltering(grid) {
   grid.$container.removeClass('grid-is-filtering')
-  if (isFilterActive(storedModel)) {
+  if (isFilterActive(grid)) {
     grid.$container.addClass('grid-is-filtering')
   }
 }
 
-function isFilterActive(storedModel) {
-  return ('search' in storedModel && !$.isEmptyObject(storedModel.search)) || ('order' in storedModel && !$.isEmptyObject(storedModel.order))
+function isFilterActive(grid) {
+  var readModel = getStoredReadModel(grid)
+  return readModel.search.length || readModel.order.length || readModel.rowsPerPage != grid.options.perPageOptions[0] || readModel.pageCurrent != 1
 }
 
 function onMouseUpCell(grid, $target) {
@@ -544,14 +584,14 @@ function getSelectedCell(grid) {
 }
 
 // deselect cell with options relating to persistence
-function cellDeselect(grid, options) {
+function cellDeselect(grid, cellOptions) {
   var $selectedRow = getSelectedRow(grid)
   var wasChanged
-  var defaults = {
+  var cellOptionsDefaults = {
     persist: false,
     revert: false
   }
-  options = $.extend(defaults, typeof options === 'undefined' ? {} : options)
+  cellOptions = $.extend(cellOptionsDefaults, typeof cellOptions === 'undefined' ? {} : cellOptions)
 
   if (!$selectedRow.length) {
     return
@@ -599,7 +639,7 @@ function cellDeselect(grid, options) {
 
   // store the new value in data
   // put in html the display name of it
-  } else if (options.revert) {
+  } else if (cellOptions.revert) {
     cellHtml = persistedValue
   } else {
     cellHtml = newValue
@@ -609,7 +649,7 @@ function cellDeselect(grid, options) {
     $selectedCell.html(cellHtml)
   }
 
-  if (options.persist && wasChanged) {
+  if (cellOptions.persist && wasChanged) {
 
     // perform persist update
     data = {}
@@ -640,7 +680,7 @@ function update(grid, data) {
     success: function(response) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Updated row \'' + data.name + '\' with value \'' + data.value + '\'.', type: 'success'})
-        buildReadModel(grid)
+        read(grid)
         dialogueCellWysi.close()
       }
     },
@@ -665,7 +705,7 @@ function createRow(grid) {
       if ('rowCount' in response && response.rowCount == 1) {
         feedbackQueue.createMessage({message: 'Created row.', type: 'success'})
         dialogueCreate.close()
-        buildReadModel(grid)
+        read(grid)
       } else {
         feedbackQueue.createMessage({message: 'Row was not created.'})
       }
@@ -779,9 +819,14 @@ function cellSelect(grid, $cell) {
 }
 
 function getRowCellValue(grid, $cell) {
-  var rowPos = $cell.parent(gS(classes.row)).index()
+  var rowPos = $cell.parent(gS(classes.row)).index() - 1
   var cellPos = $cell.index()
-  return grid.rowsCurrent[rowPos - 1][cellPos]['value']
+  if (!(rowPos in grid.rowsCurrent)) {
+    return console.warn('getRowCellValue rowPos ' + rowPos + ' not found', grid.rowsCurrent);
+  } else if (!(cellPos in grid.rowsCurrent[rowPos])) {
+    return console.warn('getRowCellValue cellPos ' + cellPos + ' not found', grid.rowsCurrent);
+  }
+  return grid.rowsCurrent[rowPos][cellPos]
 }
 
 function getStorageKey(grid) {

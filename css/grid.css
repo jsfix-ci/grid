@@ -19,10 +19,6 @@
   padding: 0;
 }
 
-.is-selected {
-  background-color: #cccccc;
-}
-
 .grid-cell-heading,
 .grid-cell {
   overflow: hidden;
@@ -41,6 +37,7 @@
   border: none;
   font-size: 12px;
   color: #fff;
+  border-bottom: 1px solid var(--color-primary-0);
 }
 
 .is-order-asc {
@@ -51,6 +48,7 @@
   background: blue;
 }
 
+.grid-search-select,
 .grid-search-input,
 .grid-cell,
 .grid-row {
@@ -73,9 +71,9 @@ body {
 
 .grid-container {
   margin: 2em 0;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      overflow: hidden;
+  border: 1px solid var(--color-primary-0);
+  border-radius: 3px;
+  overflow: hidden;
 }
 
 .grid-form-create-row {
@@ -96,9 +94,11 @@ body {
 }
 
 .grid-pagination-container {
-  padding: 10px 0;
+  padding: 10px;
   font-size: 12px;
   text-align: center;
+  line-height: 2;
+  border-top: 1px solid var(--color-primary-0);
 }
 
 .grid-pagination-select {
@@ -168,6 +168,11 @@ body {
   bottom: -6px;
 }
 
+.grid-heading-is-order-asc,
+.grid-heading-is-order-desc {
+  background-color: color(var(--color-primary-0) shade(10%))
+}
+
 .grid-cell-heading-name:before {
   display: none;
   width: 10px;
@@ -222,21 +227,25 @@ body {
   border-radius: var(--border-radius);
 }
 
-.grid-search-input:focus {
+.grid-search-input:focus,
+.grid-search-input:hover {
+  background-color: color(var(--color-primary-0) tint(90%));
+}
+
+.grid-search-select:hover {
   background-color: color(var(--color-primary-0) tint(90%));
 }
 
 .grid-search-select {
   font-size: 1em;
   box-sizing: border-box;
-  color: #fff;
   font-family: var(--font-family);
   border: none;
-  padding: 1px 0;
+  padding: 3px 0;
   margin: 0;
   width: 100%;
-  background-color: color(var(--color-primary-0) tint(0%));
-  border-radius: var(--border-radius);
+  background-color: #fff;
+  font-weight: normal;
 }
 
 .is-reading .grid-row {
@@ -263,9 +272,8 @@ body {
   margin-bottom: var(--cell-spacing);
   color: #ffffff;
   cursor: pointer;
-
   float: left;
-  
+  line-height: 1.5;
   padding: 3px 25px 3px 6px;
   border-radius: 3px;
   position: relative;
@@ -280,4 +288,10 @@ body {
   height: 23px;
   line-height: 1.4;
   text-align: center;
+}
+
+.is-selected:hover .grid-cell,
+.is-selected:hover,
+.is-selected {
+  background-color: color(var(--color-primary-0) tint(75%));
 }
