@@ -207,6 +207,8 @@ function renderPagination(grid, response) {
   possiblePages = Math.ceil(rowsTotal / rowsPerPage)
   possiblePages = possiblePages < 1 ? 1 : possiblePages
 
+  grid.possiblePages = possiblePages
+
   var options = []
   for (var index = 1; index <= possiblePages; index++) {
     options.push({key: index, value: index, keySelected: pageCurrent == index})
@@ -223,6 +225,7 @@ function renderPagination(grid, response) {
       url: grid.options.url,
       cols: grid.options.cols,
       possiblePages: possiblePages,
+      showPageControls: possiblePages > 1,
       selectPages: {options: options, classNames: ['form-select', 'grid-pagination-select', classes.pageSelect]},
       selectPerPage: {options: optionsPerPage, classNames: ['form-select', 'grid-pagination-select', classes.perPageSelect]},
       rowsTotal: rowsTotal
@@ -379,7 +382,7 @@ function setEvents(grid) {
   grid.$container.on(gEvtNs('keyup'), gS(classes.searchInput), function(event) {
     grid.$container.find(gS(classes.pageSelect)).val(1)
     if (event.which == keyCode.enter) {
-      searchInputKeyupEnter(grid, $(this))
+      searchInputCommitChange(grid, $(this))
     }
   })
 
@@ -394,7 +397,7 @@ function setEvents(grid) {
   // search select
   grid.$container.on(gEvtNs('change'), gS(classes.searchSelect), function() {
     grid.$container.find(gS(classes.pageSelect)).val(1)
-    read(grid)
+    searchInputCommitChange(grid, $(this))
   })
 
   // search field clicking dont order heading
@@ -405,6 +408,21 @@ function setEvents(grid) {
   // order column
   grid.$container.on(gEvtNs('mouseup'), gS(classes.gridCellHeadingOrderable), function() {
     mouseHeadingCell(grid, $(this))
+  })
+
+  grid.$container.on(gEvtNs('mouseup'), gS('js-grid-pagecontrol'), function() {
+    var $pageSelect = grid.$container.find(gS(classes.pageSelect))
+    var pageCurrent = parseInt($pageSelect.val())
+    var newPage
+    if ($(this).data('direction') == 'next') {
+      newPage = pageCurrent + 1
+    } else {
+      newPage = pageCurrent - 1
+    }
+    if (newPage <= grid.possiblePages && newPage > 0) {
+      $pageSelect.val(newPage)
+      $pageSelect.trigger('change')
+    }
   })
 
   // change page
@@ -429,11 +447,12 @@ function setEvents(grid) {
   })
 }
 
-function searchInputKeyupEnter(grid, $searchInput) {
-  var $heading = $searchInput.parent(gS(classes.cellHeading))
+function searchInputCommitChange(grid, $searchInput) {
+  var $heading = $searchInput.closest(gS(classes.cellHeading))
   var key = $heading.data('key')
   var readModel = getReadModel(grid)
-  readModel.search[key] = $searchInput.val()
+  var newVal = $searchInput.val()
+  readModel.search[key] = newVal
   storeReadModel(grid, readModel)
   read(grid)
 }
@@ -923,8 +942,24 @@ function getStoredReadModel(grid) {
   return readModel ? readModel : {}
 }
 
-function storeReadModel(grid, model) {
-  localStorage.setItem(getStorageKey(grid), JSON.stringify(model))
+function storeReadModel(grid, readModel) {
+  var readModelStore = getReadModelDataDefaults(grid)
+  var objectProps = ['search', 'order']
+  var objectProp
+
+  // stripping away all empty keys
+  for (var a = objectProps.length - 1; a >= 0; a--) {
+    objectProp = objectProps[a]
+    for (var key in readModel[objectProp]) {
+      if (readModel[objectProp][key]) {
+        readModelStore[objectProp][key] = readModel[objectProp][key]
+      }
+    }
+  }
+  readModelStore.visibility = readModel.visibility
+  readModelStore.rowsPerPage = readModel.rowsPerPage
+  readModelStore.pageCurrent = readModel.pageCurrent
+  localStorage.setItem(getStorageKey(grid), JSON.stringify(readModelStore))
 }
 
 function checkBrowserSupport() {

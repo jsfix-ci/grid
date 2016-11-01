@@ -24,7 +24,7 @@ per page
 {{/selectPerPage}}
 
 <div class="grid-customcols-container js-grid-customcols-container">
-    <div class="grid-button left grid-customcols-toggle js-grid-customcols-toggle">Columns Choose</div>
+    <div class="grid-button left grid-customcols-toggle js-grid-customcols-toggle">Column Visibility</div>
     <div class="grid-customcols-cols">
         
 {{#cols}}
@@ -37,3 +37,12 @@ per page
     
 </div>
 <span class="grid-total-rows">{{rowsTotal}}</span>
+
+{{#showPageControls}}
+
+<div class="grid-pagecontrols-container">
+    <div class="grid-pagecontrol js-grid-pagecontrol grid-pagecontrol-left" data-direction="previous"><</div>
+    <div class="grid-pagecontrol js-grid-pagecontrol grid-pagecontrol-right" data-direction="next">></div>
+</div>
+
+{{/showPageControls}}
