@@ -247,7 +247,7 @@ body {
   border: none;
   padding: 4px;
   margin: 0;
-  border-radius: var(--border-radius);
+  border-radius: 0;
 }
 
 .grid-search-input:focus,
