@@ -19,7 +19,9 @@ if (isset($_GET['order']) && is_array($_GET['order'])) {
 	$sql[] = 'order by';
 	$sqlOrders = [];
 	foreach ($_GET['order'] as $key => $value) {
-		$sqlOrders[] = "$key $value";
+		if ($value) {
+			$sqlOrders[] = "$key $value";
+		}
 	}
 	$sql[] = implode(', ', $sqlOrders);
 }

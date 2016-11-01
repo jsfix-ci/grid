@@ -4,7 +4,7 @@
 
     {{#.}}
 
-    <td class="grid-cell-base grid-cell grid-td js-grid-cell">{{{html}}}</td>
+    <td class="grid-cell-base grid-cell grid-td js-grid-cell {{#isVisible}}is-visible{{/isVisible}} {{#isEditable}}is-editable{{/isEditable}}">{{{html}}}</td>
 
     {{/.}}
 

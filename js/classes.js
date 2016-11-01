@@ -1,4 +1,5 @@
 module.exports = {
+  customColsCol: 'js-grid-customcols-col',
   gridCellHeadingOrderable: 'js-grid-cell-heading-orderable',
   formCreateCell: 'js-form-create-cell',
   selected: 'is-selected',

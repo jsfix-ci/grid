@@ -71,6 +71,10 @@ function setupContainer(grid) {
 
 function setupRenderAreaAndRead(grid) {
   modifyOptionsBeforeRender(grid)
+  renderGridAndRead(grid)
+}
+
+function renderGridAndRead(grid) {
   grid.$container.html(mustache.render(templateGrid, grid.options))
   read(grid)
 }
@@ -140,6 +144,11 @@ function modifyOptionsBeforeRender(grid) {
       if (col.key in readModel.order) {
         col.orderDefaultValue = readModel.order[col.key]
       }
+    }
+    if ('visibility' in readModel && col.key in readModel.visibility) {
+      col.isVisible = readModel.visibility[col.key]
+    } else {
+      col.isVisible = true
     }
     grid.options.cols[index] = col
   })
@@ -211,6 +220,8 @@ function renderPagination(grid, response) {
 
   // render pagination
   grid.$container.find(gS(classes.pageContainer)).html(mustache.render(templatePagination, {
+      url: grid.options.url,
+      cols: grid.options.cols,
       possiblePages: possiblePages,
       selectPages: {options: options, classNames: ['form-select', 'grid-pagination-select', classes.pageSelect]},
       selectPerPage: {options: optionsPerPage, classNames: ['form-select', 'grid-pagination-select', classes.perPageSelect]},
@@ -225,8 +236,13 @@ function getReadRowsAsObject(grid, rows) {
   rows.forEach(function(row, indexRow) {
     var rowObject = []
     row.forEach(function(cellValue, indexCell) {
-      var cellObject = {value: cellValue, html: cellValue}
+      var cellObject = {
+        value: cellValue,
+        html: cellValue
+      }
       var model = getModelByIndex(grid, indexCell)
+      cellObject.isVisible = model.isVisible
+      cellObject.isEditable = model.edit
       if (model) {
         if ('selectOptions' in model) {
           if (cellValue in model.selectOptions) {
@@ -311,6 +327,41 @@ function deleteRow(grid, $target) {
   })
 }
 
+function customColClick(grid, $buttonCol) {
+  var readModel = getReadModel(grid)
+  var modelKey = $buttonCol.data('key')
+  var invisibleCols = 0
+
+  if (modelKey in readModel.visibility) {
+    readModel.visibility[modelKey] = readModel.visibility[modelKey] ? false : true
+  } else {
+    readModel.visibility[modelKey] = false
+  }
+
+  for (key in readModel.visibility) {
+    if (!readModel.visibility[key]) {
+      invisibleCols++
+    }
+  }
+
+  if (invisibleCols >= grid.options.cols.length) {
+    return dialogue.create({
+      width: 200,
+      mask: true,
+      title: 'Column Visibility',
+      description: 'Only one visible column remains. Please make another visible before hiding this one.',
+      actions: {
+        Ok: function() {
+          dialogue.close()
+        }
+      }
+    })
+  }
+
+  storeReadModel(grid, readModel)
+  setupRenderAreaAndRead(grid)
+}
+
 function setEvents(grid) {
 
   grid.$container.on(gEvtNs('mouseup'), function(event) {
@@ -321,10 +372,14 @@ function setEvents(grid) {
     deleteRow(grid, $(this))
   })
 
+  grid.$container.on(gEvtNs('click'), gS(classes.customColsCol), function() {
+    customColClick(grid, $(this))
+  })
+
   grid.$container.on(gEvtNs('keyup'), gS(classes.searchInput), function(event) {
     grid.$container.find(gS(classes.pageSelect)).val(1)
     if (event.which == keyCode.enter) {
-      read(grid)
+      searchInputKeyupEnter(grid, $(this))
     }
   })
 
@@ -374,6 +429,15 @@ function setEvents(grid) {
   })
 }
 
+function searchInputKeyupEnter(grid, $searchInput) {
+  var $heading = $searchInput.parent(gS(classes.cellHeading))
+  var key = $heading.data('key')
+  var readModel = getReadModel(grid)
+  readModel.search[key] = $searchInput.val()
+  storeReadModel(grid, readModel)
+  read(grid)
+}
+
 function openCreateRow(grid) {
   dialogueCreate.create({
     mask: true,
@@ -418,6 +482,8 @@ function getCreateFormHtml(grid) {
 function mouseHeadingCell(grid, $target) {
   var dataKey = 'order'
   var order = $target.data(dataKey)
+  var colKey = $target.data('key')
+  var readModel = getReadModel(grid)
   var orderNew
 
   if (!order) {
@@ -437,6 +503,9 @@ function mouseHeadingCell(grid, $target) {
     $target.addClass('grid-heading-is-order-' + orderNew)
   }
 
+  readModel[dataKey][colKey] = orderNew
+  storeReadModel(grid, readModel)
+
   read(grid)
 }
 
@@ -444,6 +513,7 @@ function getOptionsDefaults(grid) {
   return {
     id: '', // string to give this grid a unique identity
     perPageOptions: [10, 25, 50, 100, 200],
+    customiseCols: true,
     url: {
       create: '',
       read: '',
@@ -469,6 +539,7 @@ function getOptionsDefaults(grid) {
 
 function getReadModelDataDefaults(grid) {
   return {
+    visibility: {},
     search: {},
     order: {},
     rowsPerPage: grid.options.perPageOptions[0],
@@ -532,7 +603,15 @@ function markContainerFiltering(grid) {
 
 function isFilterActive(grid) {
   var readModel = getStoredReadModel(grid)
-  return readModel.search.length || readModel.order.length || readModel.rowsPerPage != grid.options.perPageOptions[0] || readModel.pageCurrent != 1
+  return !$.isEmptyObject(readModel.search) || !$.isEmptyObject(readModel.order) || readModel.rowsPerPage != grid.options.perPageOptions[0] || readModel.pageCurrent != 1 || isAnyColInvisible(readModel)
+}
+
+function isAnyColInvisible(readModel) {
+  for (key in readModel.visibility) {
+    if (!readModel.visibility[key]) {
+      return true
+    }
+  }
 }
 
 function onMouseUpCell(grid, $target) {
@@ -556,14 +635,18 @@ function onMouseUpCell(grid, $target) {
 }
 
 function getModelByIndex(grid, index) {
-  var thKey = grid.$container.find(gS(classes.cellHeading)).eq(index).data('key')
-  var model
-  for (var index = grid.options.cols.length - 1; index >= 0; index--) {
-    model = grid.options.cols[index]
-    if (model.key == thKey) {
-      return model
+  var key = grid.$container.find(gS(classes.cellHeading)).eq(index).data('key')
+  return getModelByKey(grid, key)
+}
+
+function getModelByKey(grid, key) {
+  var theCol
+  grid.options.cols.forEach(function(col) {
+    if (col.key == key) {
+      theCol = col
     }
-  }
+  })
+  return theCol
 }
 
 // deselect row by removing classes
@@ -693,9 +776,11 @@ function update(grid, data) {
 function createRow(grid) {
   var data = {columns: {}}
   var $formCreateCells = $(gS(classes.formCreateCell))
-  $formCreateCells.forEach(function($formCreateCell) {
+  var $formCreateCell
+  for (var i = $formCreateCells.length - 1; i >= 0; i--) {
+    $formCreateCell = $($formCreateCells[i])
     data.columns[$formCreateCell.prop('name')] = $formCreateCell.val()
-  })
+  }
   $.ajax({
     type: 'get',
     url: grid.options.url.create,

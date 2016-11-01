@@ -41,6 +41,7 @@ foreach ($rows as $row) {
         $row['id'],
         $row['sku'],
         $row['name'],
+        $row['altBarcode'],
         $row['barcode'],
         $row['supplier']
     ];

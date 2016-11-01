@@ -1,6 +1,5 @@
 <?php
 
-$id = isset($_GET['id']) ? $_GET['id'] : 0;
 $columns = isset($_GET['columns']) ? $_GET['columns'] : 0;
 
 $connection = include '../connection.php';
@@ -20,5 +19,5 @@ $sql[] = '(' . implode(', ', $sqlValues) . ')';
 $sth = $connection->query(implode(' ', $sql));
 
 echo json_encode((object) [
-    'rowCount' => $sth ? $sth->rowCount() : null
+    'rowCount' => $sth->rowCount()
 ]);

@@ -4,7 +4,7 @@
 
 {{#cols}}
 
-            <th {{#width}}style="width: {{width}}%;" {{/width}}class="grid-cell-base grid-cell-heading js-grid-cell-heading {{#order}}grid-cell-heading-orderable js-grid-cell-heading-orderable{{/order}} {{#orderDefaultValue}}grid-heading-is-order-{{orderDefaultValue}}{{/orderDefaultValue}}" data-key="{{key}}" {{#orderDefaultValue}}data-order="{{orderDefaultValue}}"{{/orderDefaultValue}}>
+            <th {{#width}}style="width: {{width}}%;" {{/width}}class="grid-cell-base grid-cell-heading js-grid-cell-heading {{#order}}grid-cell-heading-orderable js-grid-cell-heading-orderable{{/order}} {{#orderDefaultValue}}grid-heading-is-order-{{orderDefaultValue}}{{/orderDefaultValue}} {{#isVisible}}is-visible{{/isVisible}}" data-key="{{key}}" {{#orderDefaultValue}}data-order="{{orderDefaultValue}}"{{/orderDefaultValue}}>
                 <div class="grid-cell-heading-name">{{name}}</div>
 
     {{#search}}
@@ -40,8 +40,3 @@
 </div>
 <div class="grid-pagination-container js-grid-pagination-container"></div>
 
-{{#url.create}}
-
-<button class="grid-button-create js-grid-button-create">Create</button>
-
-{{/url.create}}

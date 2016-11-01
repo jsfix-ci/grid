@@ -98,6 +98,7 @@ gridPrimary.create({
 gridSecondary.create({
   id: 'secondary',
   perPageOptions: [10, 25, 50, 100, 150],
+  customiseCols: false,
   url: {
     create: 'request/grid-secondary/create.php',
     read: 'request/grid-secondary/read.php',
@@ -122,9 +123,16 @@ gridSecondary.create({
     {
       search: true,
       edit: true,
+      type: 'text',
+      key: 'name',
+      name: 'Name'
+    },
+    {
+      search: true,
+      edit: true,
       type: 'html',
-      key: 'html',
-      name: 'HTML'
+      key: 'altBarcode',
+      name: 'Alt Barcode'
     },
     {
       search: true,

@@ -1,4 +1,10 @@
-<div class="grid-button-remove-filters js-grid-button-remove-filters">
+{{#url.create}}
+
+<div class="grid-button left grid-button-create js-grid-button-create">New Row</div>
+
+{{/url.create}}
+
+<div class="grid-button left grid-button-remove-filters js-grid-button-remove-filters">
     Remove Filters
     <span class="grid-button-remove-filters-cross">&times;</span>
 </div>
@@ -17,4 +23,17 @@ per page
     {{> select}}
 {{/selectPerPage}}
 
-<span class="grid-total-rows">{{rowsTotal}}</span>'
+<div class="grid-customcols-container js-grid-customcols-container">
+    <div class="grid-button left grid-customcols-toggle js-grid-customcols-toggle">Columns Choose</div>
+    <div class="grid-customcols-cols">
+        
+{{#cols}}
+
+        <div class="grid-customcols-col js-grid-customcols-col {{#isVisible}}is-visible{{/isVisible}}" data-key="{{key}}">{{name}}</div>
+
+{{/cols}}
+
+    </div>
+    
+</div>
+<span class="grid-total-rows">{{rowsTotal}}</span>
