@@ -595,6 +595,8 @@ function getAjaxReadData(grid) {
       var value = $searchInput.val()
       if (value !== ' ' && value) { // empty search value, better way?
         data.search[key] = value
+      } else if (key in data.search) {
+        delete data.search[key]
       }
     }
   }
