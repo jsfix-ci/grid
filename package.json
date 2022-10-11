@@ -44,7 +44,7 @@
     "gulp-util": "3.0.7",
     "jquery": "1.11.2",
     "modernizr": "3.3.1",
-    "mustache": "2.2.1",
+    "mustache": "^3.2.1",
     "mwyatt-codex": "2.1.0",
     "mwyatt-dialogue": "0.6.3",
     "mwyatt-feedback-queue": "0.1.0",
